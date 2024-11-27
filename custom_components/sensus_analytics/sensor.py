@@ -58,7 +58,7 @@ class SensusAnalyticsSensorBase(SensorEntity):
         usage_unit = self.coordinator.data.get("usageUnit")
         if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
             self._attr_native_unit_of_measurement = "G"
-            return usage * CF_TO_GALLON
+            return float(usage) * CF_TO_GALLON
         return usage
 
 
@@ -86,7 +86,7 @@ class SensusAnalyticsUsageUnitSensor(SensusAnalyticsSensorBase):
     def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the usage unit sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{DEFAULT_NAME} Usage Unit"
+        self._attr_name = f"{DEFAULT_NAME} Native Usage Unit"
         self._attr_unique_id = f"{self._unique_id}_usage_unit"
         self._attr_icon = "mdi:format-float"
 
