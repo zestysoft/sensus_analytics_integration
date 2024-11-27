@@ -5,17 +5,12 @@ from datetime import timedelta
 
 import requests
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
+                                                      UpdateFailed)
 from requests.exceptions import RequestException
 
-from .const import (
-    CONF_ACCOUNT_NUMBER,
-    CONF_BASE_URL,
-    CONF_METER_NUMBER,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from .const import (CONF_ACCOUNT_NUMBER, CONF_BASE_URL, CONF_METER_NUMBER,
+                    CONF_PASSWORD, CONF_USERNAME, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 

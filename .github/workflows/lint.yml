@@ -30,13 +30,13 @@ jobs:
           pip install -r requirements_test.txt
 
       - name: Run Bandit Security Linter
-        run: bandit -r custom_components/sensus_analytics
+        run: bandit -r custom_components/sensus_analytics tests
 
       - name: Run Pylint
-        run: pylint custom_components/sensus_analytics
+        run: pylint custom_components/sensus_analytics tests
 
       - name: Run isort
-        run: isort --profile=black --check-only custom_components/sensus_analytics
+        run: isort --check-only custom_components/sensus_analytics tests
 
       - name: Run Black
-        run: black --line-length=120 --check custom_components/sensus_analytics
+        run: black --line-length=120 --check custom_components/sensus_analytics tests
