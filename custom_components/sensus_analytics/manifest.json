@@ -7,7 +7,8 @@
   "codeowners": ["@zestysoft"],
   "requirements": [
     "aiohttp>=3.8.1",
-    "python-dotenv>=1.0.1"
+    "python-dotenv>=1.0.1",
+    "homeassistant>=2024.11.3"
   ],
   "iot_class": "cloud_polling",
   "config_flow": true
