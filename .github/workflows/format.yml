@@ -1,0 +1,48 @@
+name: Format Code
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  lint_and_format:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'  # Prevents infinite loop
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetches full history to push changes
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'  # Adjust to your Python version
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install black isort
+
+      - name: Run Black and isort
+        run: |
+          black custom_components/sensus_analytics
+          isort custom_components/sensus_analytics
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Auto-format code with Black and isort" || echo "No changes to commit"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
