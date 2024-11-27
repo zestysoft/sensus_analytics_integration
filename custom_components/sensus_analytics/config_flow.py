@@ -11,14 +11,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONF_ACCOUNT_NUMBER,
-    CONF_BASE_URL,
-    CONF_METER_NUMBER,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from .const import CONF_ACCOUNT_NUMBER, CONF_BASE_URL, CONF_METER_NUMBER, CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,9 +80,6 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientError as error:
             _LOGGER.error("Error validating credentials: %s", error)
             return False
-        except Exception as e:
-            _LOGGER.error("Unexpected error during credential validation: %s", e)
-            return False
 
     @staticmethod
     @callback
@@ -135,9 +125,7 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
                     CONF_METER_NUMBER,
                     default=self.config_entry.data.get(CONF_METER_NUMBER),
                 ): str,
-                vol.Required("unit_type", default=self.config_entry.data.get("unit_type", "CF")): vol.In(
-                    ["CF", "G"]
-                ),
+                vol.Required("unit_type", default=self.config_entry.data.get("unit_type", "CF")): vol.In(["CF", "G"]),
                 vol.Required(
                     "tier1_gallons",
                     default=self.config_entry.data.get("tier1_gallons", 7480.52),
