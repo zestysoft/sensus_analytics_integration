@@ -36,8 +36,8 @@ jobs:
           # Create a new branch with the tag name
           git checkout -b "$TAG_NAME"
 
-          # Push the new branch to the repository
-          git push origin "$TAG_NAME"
+          # Push the new branch to the repository, explicitly specifying it's a branch
+          git push origin "$TAG_NAME":refs/heads/"$TAG_NAME"
 
       # Create the GitHub release
       - name: Create Release
