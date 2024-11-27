@@ -265,7 +265,7 @@ class SensusAnalyticsBillingUsageSensor(SensusAnalyticsSensorBase):
         self._attr_name = f"{DEFAULT_NAME} Billing Usage"
         self._attr_unique_id = f"{self._unique_id}_billing_usage"
         self._attr_native_unit_of_measurement = "CF"
-        self._attr_icon = "mdi:currency-usd"
+        self._attr_icon = "mdi:water"
 
     @property
     def native_value(self):
