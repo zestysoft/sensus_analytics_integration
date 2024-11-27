@@ -90,7 +90,6 @@ class SensusAnalyticsUsageUnitSensor(SensusAnalyticsSensorBase):
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Native Usage Unit"
         self._attr_unique_id = f"{self._unique_id}_usage_unit"
-        self._attr_icon = "mdi:format-float"
 
     @property
     def native_value(self):
