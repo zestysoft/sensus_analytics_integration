@@ -58,7 +58,7 @@ class SensusAnalyticsSensorBase(SensorEntity):
         usage_unit = self.coordinator.data.get("usageUnit")
         if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
             self._attr_native_unit_of_measurement = "G"
-            return float(usage) * CF_TO_GALLON
+            return round(float(usage) * CF_TO_GALLON)
         return usage
 
 
