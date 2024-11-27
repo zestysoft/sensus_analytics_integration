@@ -42,7 +42,7 @@ class SensusAnalyticsSensorBase(SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=DEFAULT_NAME,
-            manufacturer="Sensus",
+            manufacturer="Unknown",
             model="Water Meter",
         )
 

@@ -6,7 +6,6 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
 
 ### **Prerequisites**
 
-- **Home Assistant**: Ensure you have Home Assistant installed and running.
 - **HACS (Home Assistant Community Store)**: Make sure HACS is installed in your Home Assistant instance. If not, follow the [HACS Installation Guide](https://hacs.xyz/docs/installation/prerequisites).
 
 ### **Steps to Install**
@@ -33,7 +32,7 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
 5. **Install the Integration**
 
    - After adding the repository, return to the "**Integrations**" tab in HACS.
-   - Search for "**Sensus Analytics Integration**" or the name specified in your `manifest.json`.
+   - Search for "**Sensus Analytics Integration**".
    - Click on the integration and then click "**Install**".
    - Wait for HACS to download and install the integration. You should see a confirmation message once it's complete.
 
@@ -49,7 +48,7 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
    - Click the "**+ Add Integration**" button in the bottom right corner.
    - Search for "**Sensus Analytics**" and select "**Sensus Analytics Integration**".
    - Follow the prompts to enter your credentials and settings:
-     - **Base URL**: Enter the base URL for your Sensus Analytics API (e.g., `https://your-water-base-url.com`).
+     - **Base URL**: Enter the base URL for your Sensus Analytics API (e.g., `https://<your_city>.sensus-analytics.com/`).
      - **Username**: Your Sensus Analytics account username.
      - **Password**: Your Sensus Analytics account password.
      - **Account Number**: Your Sensus Analytics account number.
