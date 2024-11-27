@@ -29,6 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             SensusAnalyticsLatestReadUsageSensor(coordinator, entry),
             SensusAnalyticsLatestReadTimeSensor(coordinator, entry),
             SensusAnalyticsBillingUsageSensor(coordinator, entry),
+            SensusAnalyticsBillingCostSensor(coordinator, entry),
+            SensusAnalyticsDailyFeeSensor(coordinator, entry),
         ],
         True,
     )
@@ -270,3 +272,80 @@ class SensusAnalyticsBillingUsageSensor(SensusAnalyticsSensorBase):
         """Return the state of the sensor."""
         billing_usage = self.coordinator.data.get("billingUsage")
         return self._convert_usage(billing_usage)
+
+
+class SensusAnalyticsBillingCostSensor(SensusAnalyticsSensorBase):
+    """Representation of the billing cost sensor."""
+
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
+        """Initialize the billing cost sensor."""
+        super().__init__(coordinator, entry)
+        self._attr_name = f"{DEFAULT_NAME} Billing Cost"
+        self._attr_unique_id = f"{self._unique_id}_billing_cost"
+        self._attr_native_unit_of_measurement = "USD"
+        self._attr_icon = "mdi:currency-usd"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        usage = self.coordinator.data.get("billingUsage")
+        if usage is None:
+            return None
+        usage_gallons = self._convert_usage(usage)
+        return self._calculate_cost(usage_gallons)
+
+    def _calculate_cost(self, usage_gallons):
+        """Calculate the billing cost based on tiers and service fee."""
+        tier1_gallons = self.coordinator.config_entry.data.get("tier1_gallons")
+        tier1_price = self.coordinator.config_entry.data.get("tier1_price")
+        tier2_gallons = self.coordinator.config_entry.data.get("tier2_gallons")
+        tier2_price = self.coordinator.config_entry.data.get("tier2_price")
+        tier3_price = self.coordinator.config_entry.data.get("tier3_price")
+        service_fee = self.coordinator.config_entry.data.get("service_fee")
+
+        cost = service_fee
+        if usage_gallons <= tier1_gallons:
+            cost += usage_gallons * tier1_price
+        elif usage_gallons <= tier1_gallons + tier2_gallons:
+            cost += tier1_gallons * tier1_price + (usage_gallons - tier1_gallons) * tier2_price
+        else:
+            cost += tier1_gallons * tier1_price + tier2_gallons * tier2_price + (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+        return cost
+
+
+class SensusAnalyticsDailyFeeSensor(SensusAnalyticsSensorBase):
+    """Representation of the daily fee sensor."""
+
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
+        """Initialize the daily fee sensor."""
+        super().__init__(coordinator, entry)
+        self._attr_name = f"{DEFAULT_NAME} Daily Fee"
+        self._attr_unique_id = f"{self._unique_id}_daily_fee"
+        self._attr_native_unit_of_measurement = "USD"
+        self._attr_icon = "mdi:currency-usd"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        usage = self.coordinator.data.get("dailyUsage")
+        if usage is None:
+            return None
+        usage_gallons = self._convert_usage(usage)
+        return self._calculate_daily_fee(usage_gallons)
+
+    def _calculate_daily_fee(self, usage_gallons):
+        """Calculate the daily fee based on tiers."""
+        tier1_gallons = self.coordinator.config_entry.data.get("tier1_gallons")
+        tier1_price = self.coordinator.config_entry.data.get("tier1_price")
+        tier2_gallons = self.coordinator.config_entry.data.get("tier2_gallons")
+        tier2_price = self.coordinator.config_entry.data.get("tier2_price")
+        tier3_price = self.coordinator.config_entry.data.get("tier3_price")
+
+        cost = 0
+        if usage_gallons <= tier1_gallons:
+            cost += usage_gallons * tier1_price
+        elif usage_gallons <= tier1_gallons + tier2_gallons:
+            cost += tier1_gallons * tier1_price + (usage_gallons - tier1_gallons) * tier2_price
+        else:
+            cost += tier1_gallons * tier1_price + tier2_gallons * tier2_price + (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+        return cost

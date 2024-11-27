@@ -10,7 +10,13 @@
           "password": "Password",
           "account_number": "Account Number",
           "meter_number": "Meter Number",
-          "unit_type": "Unit Type (CF or G)"
+          "unit_type": "Unit Type (CF or G)",
+          "tier1_gallons": "Tier 1 Gallons",
+          "tier1_price": "Tier 1 Price",
+          "tier2_gallons": "Tier 2 Gallons",
+          "tier2_price": "Tier 2 Price",
+          "tier3_price": "Tier 3 Price",
+          "service_fee": "Service Fee"
         }
       }
     },
@@ -31,7 +37,13 @@
           "password": "Password",
           "account_number": "Account Number",
           "meter_number": "Meter Number",
-          "unit_type": "Unit Type (CF or G)"
+          "unit_type": "Unit Type (CF or G)",
+          "tier1_gallons": "Tier 1 Gallons",
+          "tier1_price": "Tier 1 Price",
+          "tier2_gallons": "Tier 2 Gallons",
+          "tier2_price": "Tier 2 Price",
+          "tier3_price": "Tier 3 Price",
+          "service_fee": "Service Fee"
         }
       }
     }
