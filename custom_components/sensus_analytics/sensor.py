@@ -4,6 +4,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import SensusAnalyticsDataUpdateCoordinator
@@ -116,7 +117,7 @@ class SensusAnalyticsLastReadSensor(SensusAnalyticsSensorBase):
         last_read_ts = self.coordinator.data.get("lastRead")
         if last_read_ts:
             # Convert milliseconds to seconds for timestamp
-            return self.hass.helpers.dt.utc_from_timestamp(last_read_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
+            return dt_util.utc_from_timestamp(last_read_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
         return None
 
 
@@ -237,7 +238,7 @@ class SensusAnalyticsLatestReadTimeSensor(SensusAnalyticsSensorBase):
         latest_read_time_ts = self.coordinator.data.get("latestReadTime")
         if latest_read_time_ts:
             # Convert milliseconds to seconds for timestamp
-            return self.hass.helpers.dt.utc_from_timestamp(latest_read_time_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
+            return dt_util.utc_from_timestamp(latest_read_time_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
         return None
 
 
