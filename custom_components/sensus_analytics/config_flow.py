@@ -10,8 +10,14 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (CONF_ACCOUNT_NUMBER, CONF_BASE_URL, CONF_METER_NUMBER,
-                    CONF_PASSWORD, CONF_USERNAME, DOMAIN)
+from .const import (
+    CONF_ACCOUNT_NUMBER,
+    CONF_BASE_URL,
+    CONF_METER_NUMBER,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
