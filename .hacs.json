@@ -1,0 +1,7 @@
+{
+  "name": "Sensus Analytics Integration",
+  "content_in_root": false,
+  "domains": ["sensor"],
+  "iot_class": "Cloud Polling",
+  "filename": "custom_components/sensus_analytics/manifest.json"
+}
