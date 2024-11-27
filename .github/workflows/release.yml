@@ -12,8 +12,34 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      # Checkout the repository with full history to access all branches
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for all branches
 
+      # Create and push the new branch from main
+      - name: Create Branch from Main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Extract the tag name (e.g., v1.2.3)
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "Tag name is $TAG_NAME"
+
+          # Fetch the latest state of main
+          git fetch origin main
+
+          # Check out the main branch
+          git checkout main
+
+          # Create a new branch with the tag name
+          git checkout -b "$TAG_NAME"
+
+          # Push the new branch to the repository
+          git push origin "$TAG_NAME"
+
+      # Create the GitHub release
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
