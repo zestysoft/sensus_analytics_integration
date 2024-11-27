@@ -309,7 +309,11 @@ class SensusAnalyticsBillingCostSensor(SensusAnalyticsSensorBase):
         elif usage_gallons <= tier1_gallons + tier2_gallons:
             cost += tier1_gallons * tier1_price + (usage_gallons - tier1_gallons) * tier2_price
         else:
-            cost += tier1_gallons * tier1_price + tier2_gallons * tier2_price + (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+            cost += (
+                tier1_gallons * tier1_price
+                + tier2_gallons * tier2_price
+                + (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+            )
         return cost
 
 
@@ -347,5 +351,9 @@ class SensusAnalyticsDailyFeeSensor(SensusAnalyticsSensorBase):
         elif usage_gallons <= tier1_gallons + tier2_gallons:
             cost += tier1_gallons * tier1_price + (usage_gallons - tier1_gallons) * tier2_price
         else:
-            cost += tier1_gallons * tier1_price + tier2_gallons * tier2_price + (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+            cost += (
+                tier1_gallons * tier1_price
+                + tier2_gallons * tier2_price
+                + (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+            )
         return cost
