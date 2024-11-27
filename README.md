@@ -69,14 +69,16 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
 - **Latest Read Usage**: Latest cumulative usage recorded by the meter.
 - **Latest Read Time**: Timestamp of the latest reading.
 - **Billing Usage**: Total usage amount that has been billed.
+- **Billing Cost**: Total cost of the billed usage.
+- **Daily Fee**: Daily fee based on usage.
 
 ## Sensor Entities
 
 Below are the sensor entities created by this integration:
 
 - `sensor.sensus_analytics_daily_usage`: Daily water usage in cubic feet (CF).
-- `sensor.sensus_analytics_usage_unit`: Unit of measurement for water usage.
-- `sensor.sensus_analytics_meter_address`: Address of the water meter.
+- `sensor.sensus_analytics_usage_unit`: Native Unit of measurement that the source is using.
+- `sensor.sensus_analytics_meter_address`: Street address of the water meter.
 - `sensor.sensus_analytics_last_read`: Timestamp of the last meter reading.
 - `sensor.sensus_analytics_billing_active`: Indicates if billing is active.
 - `sensor.sensus_analytics_meter_longitude`: Longitude coordinate of the meter's location.
@@ -86,6 +88,8 @@ Below are the sensor entities created by this integration:
 - `sensor.sensus_analytics_latest_read_usage`: Latest cumulative usage recorded by the meter.
 - `sensor.sensus_analytics_latest_read_time`: Timestamp of the latest reading.
 - `sensor.sensus_analytics_billing_usage`: Total usage amount that has been billed.
+- `sensor.sensus_analytics_billing_cost`: Total cost of the billed usage.
+- `sensor.sensus_analytics_daily_fee`: Daily fee based on usage.
 
 ## License
 

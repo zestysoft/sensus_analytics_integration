@@ -90,7 +90,6 @@ class SensusAnalyticsUsageUnitSensor(SensusAnalyticsSensorBase):
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Native Usage Unit"
         self._attr_unique_id = f"{self._unique_id}_usage_unit"
-        self._attr_icon = "mdi:format-float"
 
     @property
     def native_value(self):
@@ -265,7 +264,7 @@ class SensusAnalyticsBillingUsageSensor(SensusAnalyticsSensorBase):
         self._attr_name = f"{DEFAULT_NAME} Billing Usage"
         self._attr_unique_id = f"{self._unique_id}_billing_usage"
         self._attr_native_unit_of_measurement = "CF"
-        self._attr_icon = "mdi:currency-usd"
+        self._attr_icon = "mdi:water"
 
     @property
     def native_value(self):
