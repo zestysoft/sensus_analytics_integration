@@ -9,9 +9,7 @@ from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import SensusAnalyticsDataUpdateCoordinator
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     """Set up the Sensus Analytics sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
@@ -36,9 +34,7 @@ async def async_setup_entry(
 class SensusAnalyticsSensorBase(SensorEntity):
     """Base class for Sensus Analytics Sensors."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the sensor."""
         self.coordinator = coordinator
         self._unique_id = f"{DOMAIN}_{entry.entry_id}"
@@ -58,9 +54,7 @@ class SensusAnalyticsSensorBase(SensorEntity):
 class SensusAnalyticsDailyUsageSensor(SensusAnalyticsSensorBase):
     """Representation of the daily usage sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the daily usage sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Daily Usage"
@@ -77,9 +71,7 @@ class SensusAnalyticsDailyUsageSensor(SensusAnalyticsSensorBase):
 class SensusAnalyticsUsageUnitSensor(SensusAnalyticsSensorBase):
     """Representation of the usage unit sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the usage unit sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Usage Unit"
@@ -95,9 +87,7 @@ class SensusAnalyticsUsageUnitSensor(SensusAnalyticsSensorBase):
 class SensusAnalyticsMeterAddressSensor(SensusAnalyticsSensorBase):
     """Representation of the meter address sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the meter address sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Meter Address"
@@ -113,9 +103,7 @@ class SensusAnalyticsMeterAddressSensor(SensusAnalyticsSensorBase):
 class SensusAnalyticsLastReadSensor(SensusAnalyticsSensorBase):
     """Representation of the last read timestamp sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the last read sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Last Read"
@@ -128,18 +116,14 @@ class SensusAnalyticsLastReadSensor(SensusAnalyticsSensorBase):
         last_read_ts = self.coordinator.data.get("lastRead")
         if last_read_ts:
             # Convert milliseconds to seconds for timestamp
-            return self.hass.helpers.dt.utc_from_timestamp(
-                last_read_ts / 1000
-            ).strftime("%Y-%m-%d %H:%M:%S")
+            return self.hass.helpers.dt.utc_from_timestamp(last_read_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
         return None
 
 
 class SensusAnalyticsBillingSensor(SensusAnalyticsSensorBase):
     """Representation of the billing status sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the billing sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Billing Active"
@@ -156,9 +140,7 @@ class SensusAnalyticsBillingSensor(SensusAnalyticsSensorBase):
 class SensusAnalyticsMeterLongitudeSensor(SensusAnalyticsSensorBase):
     """Representation of the meter longitude sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the meter longitude sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Meter Longitude"
@@ -175,9 +157,7 @@ class SensusAnalyticsMeterLongitudeSensor(SensusAnalyticsSensorBase):
 class SensusAnalyticsAlertCountSensor(SensusAnalyticsSensorBase):
     """Representation of the alert count sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the alert count sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Alert Count"
@@ -194,9 +174,7 @@ class SensusAnalyticsAlertCountSensor(SensusAnalyticsSensorBase):
 class SensusAnalyticsMeterIdSensor(SensusAnalyticsSensorBase):
     """Representation of the meter ID sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the meter ID sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Meter ID"
@@ -212,9 +190,7 @@ class SensusAnalyticsMeterIdSensor(SensusAnalyticsSensorBase):
 class SensusAnalyticsMeterLatitudeSensor(SensusAnalyticsSensorBase):
     """Representation of the meter latitude sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the meter latitude sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Meter Latitude"
@@ -231,9 +207,7 @@ class SensusAnalyticsMeterLatitudeSensor(SensusAnalyticsSensorBase):
 class SensusAnalyticsLatestReadUsageSensor(SensusAnalyticsSensorBase):
     """Representation of the latest read usage sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the latest read usage sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Latest Read Usage"
@@ -250,9 +224,7 @@ class SensusAnalyticsLatestReadUsageSensor(SensusAnalyticsSensorBase):
 class SensusAnalyticsLatestReadTimeSensor(SensusAnalyticsSensorBase):
     """Representation of the latest read time sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the latest read time sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Latest Read Time"
@@ -265,18 +237,14 @@ class SensusAnalyticsLatestReadTimeSensor(SensusAnalyticsSensorBase):
         latest_read_time_ts = self.coordinator.data.get("latestReadTime")
         if latest_read_time_ts:
             # Convert milliseconds to seconds for timestamp
-            return self.hass.helpers.dt.utc_from_timestamp(
-                latest_read_time_ts / 1000
-            ).strftime("%Y-%m-%d %H:%M:%S")
+            return self.hass.helpers.dt.utc_from_timestamp(latest_read_time_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
         return None
 
 
 class SensusAnalyticsBillingUsageSensor(SensusAnalyticsSensorBase):
     """Representation of the billing usage sensor."""
 
-    def __init__(
-        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
-    ):
+    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the billing usage sensor."""
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Billing Usage"

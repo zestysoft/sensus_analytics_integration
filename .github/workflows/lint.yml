@@ -36,7 +36,7 @@ jobs:
         run: pylint custom_components/sensus_analytics
 
       - name: Run isort
-        run: isort --profile black --check-only custom_components/sensus_analytics
+        run: isort --check-only custom_components/sensus_analytics
 
       - name: Run Black
-        run: black --line-length=120 --check custom_components/sensus_analytics
+        run: black --check custom_components/sensus_analytics
