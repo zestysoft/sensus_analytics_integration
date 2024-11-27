@@ -9,6 +9,8 @@ from homeassistant.util import dt as dt_util
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import SensusAnalyticsDataUpdateCoordinator
 
+CF_TO_GALLON = 7.48052
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     """Set up the Sensus Analytics sensor platform."""
@@ -51,6 +53,14 @@ class SensusAnalyticsSensorBase(SensorEntity):
         """Return if sensor is available."""
         return self.coordinator.last_update_success
 
+    def _convert_usage(self, usage):
+        """Convert usage based on the configuration and native unit."""
+        usage_unit = self.coordinator.data.get("usageUnit")
+        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
+            self._attr_native_unit_of_measurement = "G"
+            return usage * CF_TO_GALLON
+        return usage
+
 
 class SensusAnalyticsDailyUsageSensor(SensusAnalyticsSensorBase):
     """Representation of the daily usage sensor."""
@@ -66,7 +76,8 @@ class SensusAnalyticsDailyUsageSensor(SensusAnalyticsSensorBase):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.coordinator.data.get("dailyUsage")
+        daily_usage = self.coordinator.data.get("dailyUsage")
+        return self._convert_usage(daily_usage)
 
 
 class SensusAnalyticsUsageUnitSensor(SensusAnalyticsSensorBase):
@@ -219,7 +230,8 @@ class SensusAnalyticsLatestReadUsageSensor(SensusAnalyticsSensorBase):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.coordinator.data.get("latestReadUsage")
+        latest_read_usage = self.coordinator.data.get("latestReadUsage")
+        return self._convert_usage(latest_read_usage)
 
 
 class SensusAnalyticsLatestReadTimeSensor(SensusAnalyticsSensorBase):
@@ -256,4 +268,5 @@ class SensusAnalyticsBillingUsageSensor(SensusAnalyticsSensorBase):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.coordinator.data.get("billingUsage")
+        billing_usage = self.coordinator.data.get("billingUsage")
+        return self._convert_usage(billing_usage)
