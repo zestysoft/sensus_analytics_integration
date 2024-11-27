@@ -47,6 +47,7 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD): str,
                 vol.Required(CONF_ACCOUNT_NUMBER): str,
                 vol.Required(CONF_METER_NUMBER): str,
+                vol.Required("unit_type", default="CF"): vol.In(["CF", "G"]),  # Add this line
             }
         )
 
@@ -113,6 +114,9 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
                     CONF_METER_NUMBER,
                     default=self.config_entry.data.get(CONF_METER_NUMBER),
                 ): str,
+                vol.Required("unit_type", default=self.config_entry.data.get("unit_type", "CF")): vol.In(
+                    ["CF", "G"]
+                ),  # Add this line
             }
         )
 
