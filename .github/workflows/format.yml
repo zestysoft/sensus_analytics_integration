@@ -35,14 +35,31 @@ jobs:
           isort custom_components/sensus_analytics
 
       - name: Commit changes
+        id: commit_changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Auto-format code with Black and isort" || echo "No changes to commit"
+          if git commit -m "Auto-format code with Black and isort"; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine Branch to Push
+        id: determine_branch
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "branch=${GITHUB_HEAD_REF}" >> $GITHUB_OUTPUT
+          else
+            # Remove 'refs/heads/' prefix
+            BRANCH_NAME=${GITHUB_REF#refs/heads/}
+            echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Push changes
+        if: steps.commit_changes.outputs.changes == 'true'
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+          branch: ${{ steps.determine_branch.outputs.branch }}
