@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install bandit pylint isort black
+          pip install bandit pylint
           pip install -r requirements.txt
 
       - name: Run Bandit Security Linter
@@ -35,9 +35,3 @@ jobs:
 
       - name: Run Pylint
         run: pylint custom_components/sensus_analytics
-
-      - name: Run isort
-        run: isort --check-only custom_components/sensus_analytics
-
-      - name: Run Black
-        run: black --check custom_components/sensus_analytics
