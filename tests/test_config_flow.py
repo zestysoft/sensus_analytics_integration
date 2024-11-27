@@ -1,10 +1,12 @@
 """Test the config flow for Sensus Analytics Integration."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.core import HomeAssistant
 
 from custom_components.sensus_analytics.const import DOMAIN
+
 
 async def test_form(hass: HomeAssistant):
     """Test we can setup by config flow."""
@@ -19,7 +21,7 @@ async def test_form(hass: HomeAssistant):
 
     with patch(
         "custom_components.sensus_analytics.config_flow.SensusAnalyticsConfigFlow.async_create_entry",
-        return_value={"title": "Sensus Analytics", "data": {}}
+        return_value={"title": "Sensus Analytics", "data": {}},
     ) as mock_create_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

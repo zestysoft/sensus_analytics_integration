@@ -39,4 +39,4 @@ jobs:
         run: isort --profile=black --check-only custom_components/sensus_analytics
 
       - name: Run Black
-        run: black --line-length=100 --check custom_components/sensus_analytics
+        run: black --line-length=120 --check custom_components/sensus_analytics
