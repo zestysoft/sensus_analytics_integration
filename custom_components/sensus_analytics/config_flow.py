@@ -9,8 +9,16 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_ACCOUNT_NUMBER, CONF_BASE_URL, CONF_METER_NUMBER, CONF_PASSWORD, CONF_USERNAME, DOMAIN
+from .const import (
+    CONF_ACCOUNT_NUMBER,
+    CONF_BASE_URL,
+    CONF_METER_NUMBER,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +38,10 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            _LOGGER.debug("User input: %s", user_input)
             # Set a unique ID based on account and meter number
-            await self.async_set_unique_id(f"{user_input[CONF_ACCOUNT_NUMBER]}_{user_input[CONF_METER_NUMBER]}")
+            unique_id = f"{user_input[CONF_ACCOUNT_NUMBER]}_{user_input[CONF_METER_NUMBER]}"
+            await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
             # Validate the user input (e.g., test the connection)
@@ -47,13 +57,13 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD): str,
                 vol.Required(CONF_ACCOUNT_NUMBER): str,
                 vol.Required(CONF_METER_NUMBER): str,
-                vol.Required("unit_type", default="CF"): vol.In(["CF", "G"]),  # Add this line
-                vol.Required("tier1_gallons"): vol.Coerce(float),
-                vol.Required("tier1_price"): vol.Coerce(float),
-                vol.Required("tier2_gallons"): vol.Coerce(float),
-                vol.Required("tier2_price"): vol.Coerce(float),
-                vol.Required("tier3_price"): vol.Coerce(float),
-                vol.Required("service_fee"): vol.Coerce(float),
+                vol.Required("unit_type", default="CF"): vol.In(["CF", "G"]),
+                vol.Required("tier1_gallons", default=7480.52): cv.positive_float,
+                vol.Required("tier1_price", default=0.0128): cv.positive_float,
+                vol.Required("tier2_gallons", default=7480.52): cv.positive_float,
+                vol.Required("tier2_price", default=0.0153): cv.positive_float,
+                vol.Required("tier3_price", default=0.0202): cv.positive_float,
+                vol.Required("service_fee", default=15.00): cv.positive_float,
             }
         )
 
@@ -72,9 +82,13 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     allow_redirects=False,
                     timeout=10,
                 ) as response:
+                    _LOGGER.debug("Authentication response status: %s", response.status)
                     return response.status == 302
         except aiohttp.ClientError as error:
             _LOGGER.error("Error validating credentials: %s", error)
+            return False
+        except Exception as e:
+            _LOGGER.error("Unexpected error during credential validation: %s", e)
             return False
 
     @staticmethod
@@ -94,6 +108,7 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
+            _LOGGER.debug("User updated options: %s", user_input)
             # Update the entry with new options
             self.hass.config_entries.async_update_entry(self.config_entry, data=user_input)
             return self.async_create_entry(title="", data={})
@@ -122,31 +137,31 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
                 ): str,
                 vol.Required("unit_type", default=self.config_entry.data.get("unit_type", "CF")): vol.In(
                     ["CF", "G"]
-                ),  # Add this line
+                ),
                 vol.Required(
                     "tier1_gallons",
-                    default=self.config_entry.data.get("tier1_gallons"),
-                ): vol.Coerce(float),
+                    default=self.config_entry.data.get("tier1_gallons", 7480.52),
+                ): cv.positive_float,
                 vol.Required(
                     "tier1_price",
-                    default=self.config_entry.data.get("tier1_price"),
-                ): vol.Coerce(float),
+                    default=self.config_entry.data.get("tier1_price", 0.0128),
+                ): cv.positive_float,
                 vol.Required(
                     "tier2_gallons",
-                    default=self.config_entry.data.get("tier2_gallons"),
-                ): vol.Coerce(float),
+                    default=self.config_entry.data.get("tier2_gallons", 7480.52),
+                ): cv.positive_float,
                 vol.Required(
                     "tier2_price",
-                    default=self.config_entry.data.get("tier2_price"),
-                ): vol.Coerce(float),
+                    default=self.config_entry.data.get("tier2_price", 0.0153),
+                ): cv.positive_float,
                 vol.Required(
                     "tier3_price",
-                    default=self.config_entry.data.get("tier3_price"),
-                ): vol.Coerce(float),
+                    default=self.config_entry.data.get("tier3_price", 0.0202),
+                ): cv.positive_float,
                 vol.Required(
                     "service_fee",
-                    default=self.config_entry.data.get("service_fee"),
-                ): vol.Coerce(float),
+                    default=self.config_entry.data.get("service_fee", 15.00),
+                ): cv.positive_float,
             }
         )
 
