@@ -1,0 +1,5 @@
+pytest==8.3.3
+pytest-asyncio==0.24.0
+pytest-homeassistant-custom-component==0.13.184
+aiohttp==3.10.11
+python-dotenv==1.0.1

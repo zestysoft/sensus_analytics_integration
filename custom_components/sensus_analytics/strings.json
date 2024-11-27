@@ -1,0 +1,37 @@
+{
+  "title": "Sensus Analytics",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Sensus Analytics",
+        "data": {
+          "base_url": "Base URL",
+          "username": "Username",
+          "password": "Password",
+          "account_number": "Account Number",
+          "meter_number": "Meter Number"
+        }
+      }
+    },
+    "error": {
+      "auth": "Authentication failed"
+    },
+    "abort": {
+      "already_configured": "This account is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update Sensus Analytics Configuration",
+        "data": {
+          "base_url": "Base URL",
+          "username": "Username",
+          "password": "Password",
+          "account_number": "Account Number",
+          "meter_number": "Meter Number"
+        }
+      }
+    }
+  }
+}
