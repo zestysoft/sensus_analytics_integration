@@ -1,16 +1,24 @@
 """DataUpdateCoordinator for Sensus Analytics Integration."""
+
 import logging
 from datetime import timedelta
 
 import requests
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from requests.exceptions import RequestException
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.core import HomeAssistant
-
-from .const import DOMAIN, CONF_BASE_URL, CONF_USERNAME, CONF_PASSWORD, CONF_ACCOUNT_NUMBER, CONF_METER_NUMBER
+from .const import (
+    CONF_ACCOUNT_NUMBER,
+    CONF_BASE_URL,
+    CONF_METER_NUMBER,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
@@ -65,5 +73,5 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
             return data
 
         except RequestException as error:
-            _LOGGER.error(f"Error fetching data: {error}")
-            raise UpdateFailed(f"Error fetching data: {error}")
+            _LOGGER.error("Error fetching data: %s", error)
+            raise UpdateFailed(f"Error fetching data: {error}") from error

@@ -1,20 +1,27 @@
 """Sensor platform for the Sensus Analytics Integration."""
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
 
-from .const import DOMAIN, DEFAULT_NAME
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+
+from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import SensusAnalyticsDataUpdateCoordinator
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up the sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([SensusAnalyticsSensor(coordinator, entry)], True)
 
+
 class SensusAnalyticsSensor(SensorEntity):
     """Representation of a Sensus Analytics Sensor."""
 
-    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
+    def __init__(
+        self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry
+    ):
         """Initialize the sensor."""
         self.coordinator = coordinator
         self._name = f"{DEFAULT_NAME} Usage"
@@ -36,7 +43,7 @@ class SensusAnalyticsSensor(SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return self.coordinator.data.get('dailyUsage')
+            return self.coordinator.data.get("dailyUsage")
         return None
 
     @property

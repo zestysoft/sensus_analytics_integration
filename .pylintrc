@@ -1,5 +1,5 @@
 [MAIN]
-init-hook='import sys; sys.path.append("./.venv/lib/python3.11/site-packages")'
+init-hook='import sys; sys.path.append("./.venv/lib/python3.12/site-packages")'
 disable=
     missing-docstring,
 
