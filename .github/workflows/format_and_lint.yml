@@ -1,4 +1,4 @@
-name: Format Code
+name: Format and Lint
 
 on:
   push:
@@ -12,17 +12,17 @@ permissions:
 jobs:
   format:
     runs-on: ubuntu-latest
-    if: github.actor != 'github-actions[bot]'  # Prevents infinite loop
+    if: github.actor != 'github-actions[bot]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Fetches full history to push changes
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'  # Adjust to your Python version
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
@@ -52,7 +52,6 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "branch=${GITHUB_HEAD_REF}" >> $GITHUB_OUTPUT
           else
-            # Remove 'refs/heads/' prefix
             BRANCH_NAME=${GITHUB_REF#refs/heads/}
             echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
           fi  # Added 'fi' to close the if statement
@@ -63,3 +62,32 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ steps.determine_branch.outputs.branch }}
+
+  lint:
+    needs: format
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit pylint
+          pip install -r requirements.txt
+
+      - name: Run Bandit Security Linter
+        run: bandit -r custom_components/sensus_analytics
+
+      - name: Run Pylint
+        run: pylint custom_components/sensus_analytics
