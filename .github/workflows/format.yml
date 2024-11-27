@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  lint_and_format:
+  format:
     runs-on: ubuntu-latest
     if: github.actor != 'github-actions[bot]'  # Prevents infinite loop
     steps:
