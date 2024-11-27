@@ -1,7 +1,7 @@
 {
   "domain": "sensus_analytics",
   "name": "Sensus Analytics Integration",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "documentation": "https://github.com/zestysoft/sensus_analytics_integration",
   "dependencies": [],
   "codeowners": ["@zestysoft"],
