@@ -1,14 +1,17 @@
 name: Lint
 
 on:
-  pull_request:
+  workflow_run:
+    workflows: ["Format Code"]
+    types:
+      - completed
 
 permissions:
   contents: read
 
 jobs:
   lint:
-    name: Lint Code Base
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     strategy:
