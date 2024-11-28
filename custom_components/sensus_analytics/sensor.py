@@ -4,6 +4,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -34,12 +35,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     )
 
 
-class SensusAnalyticsSensorBase(SensorEntity):
+class SensusAnalyticsSensorBase(CoordinatorEntity, SensorEntity):
     """Base class for Sensus Analytics Sensors."""
 
     def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
         """Initialize the sensor."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._unique_id = f"{DOMAIN}_{entry.entry_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -47,11 +48,6 @@ class SensusAnalyticsSensorBase(SensorEntity):
             manufacturer="Unknown",
             model="Water Meter",
         )
-
-    @property
-    def available(self):
-        """Return if sensor is available."""
-        return self.coordinator.last_update_success
 
     def _convert_usage(self, usage):
         """Convert usage based on the configuration and native unit."""
@@ -270,14 +266,13 @@ class SensusAnalyticsBillingCostSensor(SensusAnalyticsSensorBase):
         if usage_gallons <= tier1_gallons:
             cost += usage_gallons * tier1_price
         elif usage_gallons <= tier1_gallons + tier2_gallons:
-            cost += tier1_gallons * tier1_price + (usage_gallons - tier1_gallons) * tier2_price
+            cost += tier1_gallons * tier1_price
+            cost += (usage_gallons - tier1_gallons) * tier2_price
         else:
-            cost += (
-                tier1_gallons * tier1_price
-                + tier2_gallons * tier2_price
-                + (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
-            )
-        self._attr_native_unit_of_measurement = "USD"
+            cost += tier1_gallons * tier1_price
+            cost += tier2_gallons * tier2_price
+            cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+
         return round(cost, 2)
 
 
@@ -313,12 +308,11 @@ class SensusAnalyticsDailyFeeSensor(SensusAnalyticsSensorBase):
         if usage_gallons <= tier1_gallons:
             cost += usage_gallons * tier1_price
         elif usage_gallons <= tier1_gallons + tier2_gallons:
-            cost += tier1_gallons * tier1_price + (usage_gallons - tier1_gallons) * tier2_price
+            cost += tier1_gallons * tier1_price
+            cost += (usage_gallons - tier1_gallons) * tier2_price
         else:
-            cost += (
-                tier1_gallons * tier1_price
-                + tier2_gallons * tier2_price
-                + (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
-            )
-        self._attr_native_unit_of_measurement = "USD"
+            cost += tier1_gallons * tier1_price
+            cost += tier2_gallons * tier2_price
+            cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+
         return round(cost, 2)
