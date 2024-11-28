@@ -48,14 +48,23 @@ class SensusAnalyticsSensorBase(CoordinatorEntity, SensorEntity):
             manufacturer="Unknown",
             model="Water Meter",
         )
+        self.entry = entry
 
     def _convert_usage(self, usage):
         """Convert usage based on the configuration and native unit."""
+        if usage is None:
+            return None
         usage_unit = self.coordinator.data.get("usageUnit")
         if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
-            self._attr_native_unit_of_measurement = "G"
             return round(float(usage) * CF_TO_GALLON)
         return usage
+
+    def _get_usage_unit(self):
+        """Determine the unit of measurement for usage sensors."""
+        usage_unit = self.coordinator.data.get("usageUnit")
+        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
+            return "G"
+        return usage_unit
 
 
 class SensusAnalyticsDailyUsageSensor(SensusAnalyticsSensorBase):
@@ -66,7 +75,6 @@ class SensusAnalyticsDailyUsageSensor(SensusAnalyticsSensorBase):
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Daily Usage"
         self._attr_unique_id = f"{self._unique_id}_daily_usage"
-        self._attr_native_unit_of_measurement = "CF"
         self._attr_icon = "mdi:water"
 
     @property
@@ -74,6 +82,11 @@ class SensusAnalyticsDailyUsageSensor(SensusAnalyticsSensorBase):
         """Return the state of the sensor."""
         daily_usage = self.coordinator.data.get("dailyUsage")
         return self._convert_usage(daily_usage)
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return self._get_usage_unit()
 
 
 class SensusAnalyticsUsageUnitSensor(SensusAnalyticsSensorBase):
@@ -90,6 +103,11 @@ class SensusAnalyticsUsageUnitSensor(SensusAnalyticsSensorBase):
         """Return the state of the sensor."""
         return self.coordinator.data.get("usageUnit")
 
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return None  # No unit of measurement for this sensor
+
 
 class SensusAnalyticsMeterAddressSensor(SensusAnalyticsSensorBase):
     """Representation of the meter address sensor."""
@@ -105,6 +123,11 @@ class SensusAnalyticsMeterAddressSensor(SensusAnalyticsSensorBase):
     def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data.get("meterAddress1")
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return None  # No unit of measurement for this sensor
 
 
 class SensusAnalyticsLastReadSensor(SensusAnalyticsSensorBase):
@@ -126,6 +149,11 @@ class SensusAnalyticsLastReadSensor(SensusAnalyticsSensorBase):
             return dt_util.utc_from_timestamp(last_read_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
         return None
 
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return None  # No unit of measurement for this sensor
+
 
 class SensusAnalyticsMeterLongitudeSensor(SensusAnalyticsSensorBase):
     """Representation of the meter longitude sensor."""
@@ -135,13 +163,17 @@ class SensusAnalyticsMeterLongitudeSensor(SensusAnalyticsSensorBase):
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Meter Longitude"
         self._attr_unique_id = f"{self._unique_id}_meter_longitude"
-        self._attr_native_unit_of_measurement = "°"
         self._attr_icon = "mdi:longitude"
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data.get("meterLong")
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "°"
 
 
 class SensusAnalyticsMeterIdSensor(SensusAnalyticsSensorBase):
@@ -159,6 +191,11 @@ class SensusAnalyticsMeterIdSensor(SensusAnalyticsSensorBase):
         """Return the state of the sensor."""
         return self.coordinator.data.get("meterId")
 
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return None  # No unit of measurement for this sensor
+
 
 class SensusAnalyticsMeterLatitudeSensor(SensusAnalyticsSensorBase):
     """Representation of the meter latitude sensor."""
@@ -168,13 +205,17 @@ class SensusAnalyticsMeterLatitudeSensor(SensusAnalyticsSensorBase):
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Meter Latitude"
         self._attr_unique_id = f"{self._unique_id}_meter_latitude"
-        self._attr_native_unit_of_measurement = "°"
         self._attr_icon = "mdi:latitude"
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data.get("meterLat")
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "°"
 
 
 class SensusAnalyticsLatestReadUsageSensor(SensusAnalyticsSensorBase):
@@ -185,7 +226,6 @@ class SensusAnalyticsLatestReadUsageSensor(SensusAnalyticsSensorBase):
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Latest Read Usage"
         self._attr_unique_id = f"{self._unique_id}_latest_read_usage"
-        self._attr_native_unit_of_measurement = "CF"
         self._attr_icon = "mdi:water"
 
     @property
@@ -193,6 +233,11 @@ class SensusAnalyticsLatestReadUsageSensor(SensusAnalyticsSensorBase):
         """Return the state of the sensor."""
         latest_read_usage = self.coordinator.data.get("latestReadUsage")
         return self._convert_usage(latest_read_usage)
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return self._get_usage_unit()
 
 
 class SensusAnalyticsLatestReadTimeSensor(SensusAnalyticsSensorBase):
@@ -214,6 +259,11 @@ class SensusAnalyticsLatestReadTimeSensor(SensusAnalyticsSensorBase):
             return dt_util.utc_from_timestamp(latest_read_time_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
         return None
 
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return None  # No unit of measurement for this sensor
+
 
 class SensusAnalyticsBillingUsageSensor(SensusAnalyticsSensorBase):
     """Representation of the billing usage sensor."""
@@ -223,7 +273,6 @@ class SensusAnalyticsBillingUsageSensor(SensusAnalyticsSensorBase):
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Billing Usage"
         self._attr_unique_id = f"{self._unique_id}_billing_usage"
-        self._attr_native_unit_of_measurement = "CF"
         self._attr_icon = "mdi:water"
 
     @property
@@ -231,6 +280,11 @@ class SensusAnalyticsBillingUsageSensor(SensusAnalyticsSensorBase):
         """Return the state of the sensor."""
         billing_usage = self.coordinator.data.get("billingUsage")
         return self._convert_usage(billing_usage)
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return self._get_usage_unit()
 
 
 class SensusAnalyticsBillingCostSensor(SensusAnalyticsSensorBase):
@@ -241,7 +295,6 @@ class SensusAnalyticsBillingCostSensor(SensusAnalyticsSensorBase):
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Billing Cost"
         self._attr_unique_id = f"{self._unique_id}_billing_cost"
-        self._attr_native_unit_of_measurement = "USD"
         self._attr_icon = "mdi:currency-usd"
 
     @property
@@ -252,6 +305,11 @@ class SensusAnalyticsBillingCostSensor(SensusAnalyticsSensorBase):
             return None
         usage_gallons = self._convert_usage(usage)
         return self._calculate_cost(usage_gallons)
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "USD"
 
     def _calculate_cost(self, usage_gallons):
         """Calculate the billing cost based on tiers and service fee."""
@@ -284,7 +342,6 @@ class SensusAnalyticsDailyFeeSensor(SensusAnalyticsSensorBase):
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Daily Fee"
         self._attr_unique_id = f"{self._unique_id}_daily_fee"
-        self._attr_native_unit_of_measurement = "USD"
         self._attr_icon = "mdi:currency-usd"
 
     @property
@@ -295,6 +352,11 @@ class SensusAnalyticsDailyFeeSensor(SensusAnalyticsSensorBase):
             return None
         usage_gallons = self._convert_usage(usage)
         return self._calculate_daily_fee(usage_gallons)
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "USD"
 
     def _calculate_daily_fee(self, usage_gallons):
         """Calculate the daily fee based on tiers."""
