@@ -23,7 +23,7 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
         self.password = config_entry.data[CONF_PASSWORD]
         self.account_number = config_entry.data[CONF_ACCOUNT_NUMBER]
         self.meter_number = config_entry.data[CONF_METER_NUMBER]
-        self.config_entry = config_entry  # Store the config_entry if needed elsewhere
+        self.config_entry = config_entry
 
         super().__init__(
             hass,
