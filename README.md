@@ -61,9 +61,7 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
 - **Usage Unit**: Displays the unit of measurement for water usage.
 - **Meter Address**: Shows the address of the water meter.
 - **Last Read**: Timestamp of the last meter reading.
-- **Billing Active**: Indicates if billing is active.
 - **Meter Longitude**: Longitude coordinate of the meter's location.
-- **Alert Count**: Number of active alerts.
 - **Meter ID**: Unique identifier for the water meter.
 - **Meter Latitude**: Latitude coordinate of the meter's location.
 - **Latest Read Usage**: Latest cumulative usage recorded by the meter.
@@ -76,13 +74,11 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
 
 Below are the sensor entities created by this integration:
 
-- `sensor.sensus_analytics_daily_usage`: Daily water usage in cubic feet (CF).
-- `sensor.sensus_analytics_usage_unit`: Native Unit of measurement that the source is using.
+- `sensor.sensus_analytics_daily_usage`: Daily water usage.
+- `sensor.sensus_analytics_usage_unit`: Native Unit of measurement chosen by Sensus Analytics.
 - `sensor.sensus_analytics_meter_address`: Street address of the water meter.
 - `sensor.sensus_analytics_last_read`: Timestamp of the last meter reading.
-- `sensor.sensus_analytics_billing_active`: Indicates if billing is active.
 - `sensor.sensus_analytics_meter_longitude`: Longitude coordinate of the meter's location.
-- `sensor.sensus_analytics_alert_count`: Number of active alerts.
 - `sensor.sensus_analytics_meter_id`: Unique identifier for the water meter.
 - `sensor.sensus_analytics_meter_latitude`: Latitude coordinate of the meter's location.
 - `sensor.sensus_analytics_latest_read_usage`: Latest cumulative usage recorded by the meter.
