@@ -21,9 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             SensusAnalyticsUsageUnitSensor(coordinator, entry),
             SensusAnalyticsMeterAddressSensor(coordinator, entry),
             SensusAnalyticsLastReadSensor(coordinator, entry),
-            SensusAnalyticsBillingSensor(coordinator, entry),
             SensusAnalyticsMeterLongitudeSensor(coordinator, entry),
-            SensusAnalyticsAlertCountSensor(coordinator, entry),
             SensusAnalyticsMeterIdSensor(coordinator, entry),
             SensusAnalyticsMeterLatitudeSensor(coordinator, entry),
             SensusAnalyticsLatestReadUsageSensor(coordinator, entry),
@@ -133,22 +131,6 @@ class SensusAnalyticsLastReadSensor(SensusAnalyticsSensorBase):
         return None
 
 
-class SensusAnalyticsBillingSensor(SensusAnalyticsSensorBase):
-    """Representation of the billing status sensor."""
-
-    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
-        """Initialize the billing sensor."""
-        super().__init__(coordinator, entry)
-        self._attr_name = f"{DEFAULT_NAME} Billing Active"
-        self._attr_unique_id = f"{self._unique_id}_billing"
-        self._attr_icon = "mdi:currency-usd"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data.get("billing")
-
-
 class SensusAnalyticsMeterLongitudeSensor(SensusAnalyticsSensorBase):
     """Representation of the meter longitude sensor."""
 
@@ -164,23 +146,6 @@ class SensusAnalyticsMeterLongitudeSensor(SensusAnalyticsSensorBase):
     def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data.get("meterLong")
-
-
-class SensusAnalyticsAlertCountSensor(SensusAnalyticsSensorBase):
-    """Representation of the alert count sensor."""
-
-    def __init__(self, coordinator: SensusAnalyticsDataUpdateCoordinator, entry: ConfigEntry):
-        """Initialize the alert count sensor."""
-        super().__init__(coordinator, entry)
-        self._attr_name = f"{DEFAULT_NAME} Alert Count"
-        self._attr_unique_id = f"{self._unique_id}_alert_count"
-        self._attr_native_unit_of_measurement = "Alerts"
-        self._attr_icon = "mdi:alert"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data.get("alertCount")
 
 
 class SensusAnalyticsMeterIdSensor(SensusAnalyticsSensorBase):
