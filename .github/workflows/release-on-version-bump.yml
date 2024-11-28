@@ -1,0 +1,74 @@
+name: Release on Version Bump
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  release:
+    if: ${{ github.event.pull_request.merged }} == true && ${{ github.event.pull_request.base.ref }} == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      PREV_SHA: ''
+      VERSION: ''
+      PREV_VERSION: ''
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get previous commit hash
+        id: prev_commit
+        run: |
+          PREV_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+          echo "PREV_SHA=$PREV_SHA" >> $GITHUB_ENV
+
+      - name: Get current version
+        id: current_version
+        run: |
+          VERSION=$(jq -r '.version' custom_components/sensus_analytics/manifest.json)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Get previous version
+        id: previous_version
+        env:
+          PREV_SHA: ${{ env.PREV_SHA }}
+        run: |
+          if [ -z "$PREV_SHA" ]; then
+            echo "No previous commit found. Setting PREV_VERSION to empty."
+            PREV_VERSION=""
+          else
+            PREV_VERSION=$(git show "$PREV_SHA":custom_components/sensus_analytics/manifest.json 2>/dev/null | jq -r '.version' || echo "")
+          fi
+          echo "PREV_VERSION=$PREV_VERSION" >> $GITHUB_ENV
+
+      - name: Compare versions
+        id: version_compare
+        env:
+          VERSION: ${{ env.VERSION }}
+          PREV_VERSION: ${{ env.PREV_VERSION }}
+        run: |
+          if [ "$VERSION" != "$PREV_VERSION" ] && [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version has changed from $PREV_VERSION to $VERSION"
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version has not changed or does not match the format v*.*.*"
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        if: steps.version_compare.outputs.version_changed == 'true'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ env.VERSION }}
+          name: ${{ github.event.pull_request.title }}
+          body: ${{ github.event.pull_request.body }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+            custom_components/**
+          commit: ${{ github.sha }}
