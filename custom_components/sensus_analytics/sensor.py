@@ -273,6 +273,7 @@ class SensusAnalyticsBillingCostSensor(SensusAnalyticsSensorBase):
             cost += tier2_gallons * tier2_price
             cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
 
+        self._attr_native_unit_of_measurement = "USD"
         return round(cost, 2)
 
 
@@ -314,5 +315,6 @@ class SensusAnalyticsDailyFeeSensor(SensusAnalyticsSensorBase):
             cost += tier1_gallons * tier1_price
             cost += tier2_gallons * tier2_price
             cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
-
+        
+        self._attr_native_unit_of_measurement = "USD"
         return round(cost, 2)
