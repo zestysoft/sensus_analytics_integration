@@ -141,7 +141,6 @@ class SensusAnalyticsBillingSensor(SensusAnalyticsSensorBase):
         super().__init__(coordinator, entry)
         self._attr_name = f"{DEFAULT_NAME} Billing Active"
         self._attr_unique_id = f"{self._unique_id}_billing"
-        self._attr_device_class = "power"
         self._attr_icon = "mdi:currency-usd"
 
     @property
