@@ -23,6 +23,7 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
         self.password = config_entry.data[CONF_PASSWORD]
         self.account_number = config_entry.data[CONF_ACCOUNT_NUMBER]
         self.meter_number = config_entry.data[CONF_METER_NUMBER]
+        self.config_entry = config_entry
 
         super().__init__(
             hass,
@@ -33,10 +34,12 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from API."""
+        _LOGGER.debug("Async update of data started")
         return await self.hass.async_add_executor_job(self._fetch_data)
 
     def _fetch_data(self):
         """Fetch data from the Sensus Analytics API."""
+        _LOGGER.debug("Starting data fetch from Sensus Analytics API")
         try:
             session = requests.Session()
             # Get session cookie
@@ -48,8 +51,10 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
             )
             # Check if login was successful
             if r_sec.status_code != 302:
-                _LOGGER.error("Authentication failed")
+                _LOGGER.error("Authentication failed with status code %s", r_sec.status_code)
                 raise UpdateFailed("Authentication failed")
+
+            _LOGGER.debug("Authentication successful")
 
             # Request meter data
             response = session.post(
@@ -62,9 +67,16 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
                 timeout=10,
             )
             response.raise_for_status()
-            data = response.json().get("widgetList")[0].get("data").get("devices")[0]
+            data = response.json()
+            _LOGGER.debug("Raw response data: %s", data)
+            # Navigate to the specific data
+            data = data.get("widgetList")[0].get("data").get("devices")[0]
+            _LOGGER.debug("Parsed data: %s", data)
             return data
 
         except RequestException as error:
             _LOGGER.error("Error fetching data: %s", error)
             raise UpdateFailed(f"Error fetching data: {error}") from error
+        except Exception as error:
+            _LOGGER.error("Unexpected error: %s", error)
+            raise UpdateFailed(f"Unexpected error: {error}") from error
