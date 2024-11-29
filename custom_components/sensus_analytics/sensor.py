@@ -275,11 +275,11 @@ class SensusAnalyticsBillingCostSensor(StaticUnitSensorBase):
     def _calculate_cost(self, usage_gallons):
         """Calculate the billing cost based on tiers and service fee."""
         tier1_gallons = self.coordinator.config_entry.data.get("tier1_gallons") or 0
-        tier1_price = self.coordinator.config_entry.data.get("tier1_price") or 0
+        tier1_price = self.coordinator.config_entry.data.get("tier1_price")
         tier2_gallons = self.coordinator.config_entry.data.get("tier2_gallons") or 0
         tier2_price = self.coordinator.config_entry.data.get("tier2_price") or 0
         tier3_price = self.coordinator.config_entry.data.get("tier3_price") or 0
-        service_fee = self.coordinator.config_entry.data.get("service_fee") or 0
+        service_fee = self.coordinator.config_entry.data.get("service_fee")
 
         cost = service_fee
         if usage_gallons is not None:
