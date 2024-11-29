@@ -36,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 class UsageConversionMixin:
     """Mixin to provide usage conversion."""
+
     # pylint: disable=too-few-public-methods
     def _convert_usage(self, usage):
         """Convert usage based on configuration and native unit."""
