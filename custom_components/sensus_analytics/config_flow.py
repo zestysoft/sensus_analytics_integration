@@ -130,10 +130,10 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
                     "tier1_gallons",
                     default=self.config_entry.data.get("tier1_gallons", None),
                 ): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
-                vol.Optional(
+                vol.Required(
                     "tier1_price",
-                    default=self.config_entry.data.get("tier1_price", None),
-                ): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
+                    default=self.config_entry.data.get("tier1_price", 0.0128),
+                ): cv.positive_float,
                 vol.Optional(
                     "tier2_gallons",
                     default=self.config_entry.data.get("tier2_gallons", None),
@@ -146,10 +146,10 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
                     "tier3_price",
                     default=self.config_entry.data.get("tier3_price", None),
                 ): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
-                vol.Optional(
+                vol.Required(
                     "service_fee",
-                    default=self.config_entry.data.get("service_fee", None),
-                ): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
+                    default=self.config_entry.data.get("service_fee", 15.00),
+                ): cv.positive_float,
             }
         )
 
