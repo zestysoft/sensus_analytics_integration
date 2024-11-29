@@ -18,7 +18,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Fetch all history
 
       - name: Get previous commit hash
         id: prev_commit
@@ -51,19 +51,27 @@ jobs:
           VERSION: ${{ env.VERSION }}
           PREV_VERSION: ${{ env.PREV_VERSION }}
         run: |
-          if [ "$VERSION" != "$PREV_VERSION" ] && [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          # Remove leading 'v' if present
+          VERSION_STRIPPED=${VERSION#v}
+          PREV_VERSION_STRIPPED=${PREV_VERSION#v}
+
+          # Check if versions are different and match the format
+          if [ "$VERSION_STRIPPED" != "$PREV_VERSION_STRIPPED" ] && [[ "$VERSION_STRIPPED" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Version has changed from $PREV_VERSION to $VERSION"
             echo "version_changed=true" >> $GITHUB_OUTPUT
           else
-            echo "Version has not changed or does not match the format v*.*.*"
+            echo "Version has not changed or does not match the format *.*.*"
             echo "version_changed=false" >> $GITHUB_OUTPUT
           fi
+
+          # Output VERSION_STRIPPED to GITHUB_ENV
+          echo "VERSION_STRIPPED=$VERSION_STRIPPED" >> $GITHUB_ENV
 
       - name: Create Release
         if: steps.version_compare.outputs.version_changed == 'true'
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ env.VERSION }}
+          tag: v${{ env.VERSION_STRIPPED }}
           name: ${{ github.event.pull_request.title }}
           body: ${{ github.event.pull_request.body }}
           draft: false
