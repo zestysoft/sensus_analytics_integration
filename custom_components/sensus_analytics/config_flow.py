@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_ACCOUNT_NUMBER, CONF_BASE_URL, CONF_METER_NUMBER, CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
@@ -51,11 +52,11 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_METER_NUMBER): str,
                 vol.Required("unit_type", default="CF"): vol.In(["CF", "G"]),
                 vol.Optional("tier1_gallons", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
-                vol.Required("tier1_price", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
+                vol.Required("tier1_price", default=0.0128): cv.positive_float,
                 vol.Optional("tier2_gallons", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
                 vol.Optional("tier2_price", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
                 vol.Optional("tier3_price", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
-                vol.Required("service_fee", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
+                vol.Required("service_fee", default=15.00): cv.positive_float,
             }
         )
 
