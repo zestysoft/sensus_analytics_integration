@@ -51,7 +51,7 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_METER_NUMBER): str,
                 vol.Required("unit_type", default="CF"): vol.In(["CF", "G"]),
                 vol.Optional("tier1_gallons", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
-                vol.Optional("tier1_price", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
+                vol.Required("tier1_price", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
                 vol.Optional("tier2_gallons", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
                 vol.Optional("tier2_price", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
                 vol.Optional("tier3_price", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
