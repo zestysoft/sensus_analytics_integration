@@ -74,6 +74,13 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
      - **Password**: Your Sensus Analytics account password.
      - **Account Number**: Your Sensus Analytics account number.
      - **Meter Number**: Your water meter number.
+     - **Unit Type**: Choose which unit type you want the data to be used by Home Assistant.
+     - **Tier 1 Gallons Cutoff**: Number of gallons before transitioning to tier 2 pricing.
+     - **Tier 1 Per Gallon Price**: Price per gallon (not unit or CF) at tier 1 level.
+     - **Tier 2 Gallons Cutoff**: Number of gallons before transitioning to tier 3 pricing.
+     - **Tier 2 Per Gallon Price**: Price per gallon (not unit or CF) at tier 2 level.
+     - **Tier 3 Per Gallon Price**: Price per gallon (not unit or CF) at tier 3 level.
+     - **Service Fee**: Price the water company charges just to have service.
    - Click "**Submit**" to finalize the configuration.
 
 ## Sensor Entities
