@@ -274,36 +274,24 @@ class SensusAnalyticsBillingCostSensor(StaticUnitSensorBase):
 
     def _calculate_cost(self, usage_gallons):
         """Calculate the billing cost based on tiers and service fee."""
-        tier1_gallons = self.coordinator.config_entry.data.get("tier1_gallons") or 0
+        tier1_gallons = self.coordinator.config_entry.data.get("tier1_gallons")
         tier1_price = self.coordinator.config_entry.data.get("tier1_price")
-        tier2_gallons = self.coordinator.config_entry.data.get("tier2_gallons") or 0
-        tier2_price = self.coordinator.config_entry.data.get("tier2_price") or 0
-        tier3_price = self.coordinator.config_entry.data.get("tier3_price") or 0
+        tier2_gallons = self.coordinator.config_entry.data.get("tier2_gallons")
+        tier2_price = self.coordinator.config_entry.data.get("tier2_price")
+        tier3_price = self.coordinator.config_entry.data.get("tier3_price")
         service_fee = self.coordinator.config_entry.data.get("service_fee")
 
         cost = service_fee
         if usage_gallons is not None:
-            if tier1_gallons == 0:
-                # No tier 1 limit, all usage is charged at tier 1 price
+            if usage_gallons <= tier1_gallons:
                 cost += usage_gallons * tier1_price
-            elif tier2_gallons == 0:
-                # No tier 2 limit, calculate for tier 1 and tier 2
-                if usage_gallons <= tier1_gallons:
-                    cost += usage_gallons * tier1_price
-                else:
-                    cost += tier1_gallons * tier1_price
-                    cost += (usage_gallons - tier1_gallons) * tier2_price
-            elif tier3_price > 0:
-                # Calculate for all three tiers
-                if usage_gallons <= tier1_gallons:
-                    cost += usage_gallons * tier1_price
-                elif usage_gallons <= tier1_gallons + tier2_gallons:
-                    cost += tier1_gallons * tier1_price
-                    cost += (usage_gallons - tier1_gallons) * tier2_price
-                else:
-                    cost += tier1_gallons * tier1_price
-                    cost += tier2_gallons * tier2_price
-                    cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+            elif usage_gallons <= tier1_gallons + tier2_gallons:
+                cost += tier1_gallons * tier1_price
+                cost += (usage_gallons - tier1_gallons) * tier2_price
+            else:
+                cost += tier1_gallons * tier1_price
+                cost += tier2_gallons * tier2_price
+                cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
 
         return round(cost, 2)
 
@@ -329,34 +317,22 @@ class SensusAnalyticsDailyFeeSensor(StaticUnitSensorBase):
 
     def _calculate_daily_fee(self, usage_gallons):
         """Calculate the daily fee based on tiers."""
-        tier1_gallons = self.coordinator.config_entry.data.get("tier1_gallons") or 0
+        tier1_gallons = self.coordinator.config_entry.data.get("tier1_gallons")
         tier1_price = self.coordinator.config_entry.data.get("tier1_price")
-        tier2_gallons = self.coordinator.config_entry.data.get("tier2_gallons") or 0
-        tier2_price = self.coordinator.config_entry.data.get("tier2_price") or 0
-        tier3_price = self.coordinator.config_entry.data.get("tier3_price") or 0
+        tier2_gallons = self.coordinator.config_entry.data.get("tier2_gallons")
+        tier2_price = self.coordinator.config_entry.data.get("tier2_price")
+        tier3_price = self.coordinator.config_entry.data.get("tier3_price")
 
         cost = 0
         if usage_gallons is not None:
-            if tier1_gallons == 0:
-                # No tier 1 limit, all usage is charged at tier 1 price
+            if usage_gallons <= tier1_gallons:
                 cost += usage_gallons * tier1_price
-            elif tier2_gallons == 0:
-                # No tier 2 limit, calculate for tier 1 and tier 2
-                if usage_gallons <= tier1_gallons:
-                    cost += usage_gallons * tier1_price
-                else:
-                    cost += tier1_gallons * tier1_price
-                    cost += (usage_gallons - tier1_gallons) * tier2_price
-            elif tier3_price > 0:
-                # Calculate for all three tiers
-                if usage_gallons <= tier1_gallons:
-                    cost += usage_gallons * tier1_price
-                elif usage_gallons <= tier1_gallons + tier2_gallons:
-                    cost += tier1_gallons * tier1_price
-                    cost += (usage_gallons - tier1_gallons) * tier2_price
-                else:
-                    cost += tier1_gallons * tier1_price
-                    cost += tier2_gallons * tier2_price
-                    cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+            elif usage_gallons <= tier1_gallons + tier2_gallons:
+                cost += tier1_gallons * tier1_price
+                cost += (usage_gallons - tier1_gallons) * tier2_price
+            else:
+                cost += tier1_gallons * tier1_price
+                cost += tier2_gallons * tier2_price
+                cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
 
         return round(cost, 2)

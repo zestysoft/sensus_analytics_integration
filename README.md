@@ -100,7 +100,8 @@ Below are the sensor entities created by this integration:
 
 # Be kind
 
-If you like the integration, how about buying me a coffee? :)
+If you like the component, why don't you support me by buying me a coffee?
+It would certainly motivate me to further improve this work.
 
 [![Buy me a coffee!](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/zestysoft)
 

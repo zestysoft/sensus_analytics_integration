@@ -1,12 +1,12 @@
 name: Release on Version Bump
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
+    types: [closed]
 
 jobs:
   release:
+    if: ${{ github.event.pull_request.merged }} == true && ${{ github.event.pull_request.base.ref }} == 'main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -64,17 +64,16 @@ jobs:
             echo "version_changed=false" >> $GITHUB_OUTPUT
           fi
 
-          # Output VERSION_STRIPPED to GITHUB_ENV and as a step output
+          # Output VERSION_STRIPPED to GITHUB_ENV
           echo "VERSION_STRIPPED=$VERSION_STRIPPED" >> $GITHUB_ENV
-          echo "version_stripped=$VERSION_STRIPPED" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        if: ${{ steps.version_compare.outputs.version_changed == 'true' && steps.version_compare.outputs.version_stripped != '' }}
+        if: steps.version_compare.outputs.version_changed == 'true'
         uses: ncipollo/release-action@v1
         with:
-          tag: v${{ steps.version_compare.outputs.version_stripped }}
-          name: Release v${{ steps.version_compare.outputs.version_stripped }}
-          body: "Automated release for version v${{ steps.version_compare.outputs.version_stripped }}."
+          tag: v${{ env.VERSION_STRIPPED }}
+          name: ${{ github.event.pull_request.title }}
+          body: ${{ github.event.pull_request.body }}
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
