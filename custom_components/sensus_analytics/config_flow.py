@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from enum import Enum
 
 import aiohttp
 import voluptuous as vol
@@ -17,11 +16,6 @@ from .const import CONF_ACCOUNT_NUMBER, CONF_BASE_URL, CONF_METER_NUMBER, CONF_P
 _LOGGER = logging.getLogger(__name__)
 
 
-class UnitType(Enum):
-    CF = "CF"
-    G = "G"
-
-
 class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sensus Analytics Integration."""
 
@@ -33,7 +27,7 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return False  # Return False if you don't have specific matching logic
 
     async def async_step_user(self, user_input=None) -> FlowResult:
-        """Handle the initial step of the config flow."""
+        """Handle the initial step."""
         errors = {}
 
         if user_input is not None:
@@ -56,7 +50,7 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD): str,
                 vol.Required(CONF_ACCOUNT_NUMBER): str,
                 vol.Required(CONF_METER_NUMBER): str,
-                vol.Required("unit_type", default=UnitType.CF): cv.enum(UnitType),
+                vol.Required("unit_type", default="CF"): vol.In(["CF", "G"]),
                 vol.Optional("tier1_gallons", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
                 vol.Required("tier1_price", default=0.0128): cv.positive_float,
                 vol.Optional("tier2_gallons", default=None): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
@@ -106,78 +100,55 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             _LOGGER.debug("User updated options: %s", user_input)
             # Update the entry with new options
-            self.hass.config_entries.async_update_entry(self.config_entry, options=user_input)
+            self.hass.config_entries.async_update_entry(self.config_entry, data=user_input)
             return self.async_create_entry(title="", data={})
 
         data_schema = vol.Schema(
             {
                 vol.Required(
                     CONF_BASE_URL,
-                    default=self.config_entry.options.get(CONF_BASE_URL, self.config_entry.data.get(CONF_BASE_URL)),
+                    default=self.config_entry.data.get(CONF_BASE_URL),
                 ): str,
                 vol.Required(
                     CONF_USERNAME,
-                    default=self.config_entry.options.get(CONF_USERNAME, self.config_entry.data.get(CONF_USERNAME)),
+                    default=self.config_entry.data.get(CONF_USERNAME),
                 ): str,
                 vol.Required(
                     CONF_PASSWORD,
-                    default=self.config_entry.options.get(CONF_PASSWORD, self.config_entry.data.get(CONF_PASSWORD)),
+                    default=self.config_entry.data.get(CONF_PASSWORD),
                 ): str,
                 vol.Required(
                     CONF_ACCOUNT_NUMBER,
-                    default=self.config_entry.options.get(
-                        CONF_ACCOUNT_NUMBER,
-                        self.config_entry.data.get(CONF_ACCOUNT_NUMBER),
-                    ),
+                    default=self.config_entry.data.get(CONF_ACCOUNT_NUMBER),
                 ): str,
                 vol.Required(
                     CONF_METER_NUMBER,
-                    default=self.config_entry.options.get(
-                        CONF_METER_NUMBER,
-                        self.config_entry.data.get(CONF_METER_NUMBER),
-                    ),
+                    default=self.config_entry.data.get(CONF_METER_NUMBER),
                 ): str,
-                vol.Required(
-                    "unit_type",
-                    default=self.config_entry.options.get(
-                        "unit_type", self.config_entry.data.get("unit_type", UnitType.CF)
-                    ),
-                ): cv.enum(UnitType),
+                vol.Required("unit_type", default=self.config_entry.data.get("unit_type", "CF")): vol.In(["CF", "G"]),
                 vol.Optional(
                     "tier1_gallons",
-                    default=self.config_entry.options.get(
-                        "tier1_gallons", self.config_entry.data.get("tier1_gallons", None)
-                    ),
+                    default=self.config_entry.data.get("tier1_gallons", None),
                 ): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
                 vol.Required(
                     "tier1_price",
-                    default=self.config_entry.options.get(
-                        "tier1_price", self.config_entry.data.get("tier1_price", 0.0128)
-                    ),
+                    default=self.config_entry.data.get("tier1_price", 0.0128),
                 ): cv.positive_float,
                 vol.Optional(
                     "tier2_gallons",
-                    default=self.config_entry.options.get(
-                        "tier2_gallons", self.config_entry.data.get("tier2_gallons", None)
-                    ),
+                    default=self.config_entry.data.get("tier2_gallons", None),
                 ): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
                 vol.Optional(
                     "tier2_price",
-                    default=self.config_entry.options.get(
-                        "tier2_price", self.config_entry.data.get("tier2_price", None)
-                    ),
+                    default=self.config_entry.data.get("tier2_price", None),
                 ): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
                 vol.Optional(
                     "tier3_price",
-                    default=self.config_entry.options.get(
-                        "tier3_price", self.config_entry.data.get("tier3_price", None)
-                    ),
+                    default=self.config_entry.data.get("tier3_price", None),
                 ): vol.Any(None, vol.Coerce(float), vol.Range(min=0)),
                 vol.Required(
                     "service_fee",
-                    default=self.config_entry.options.get(
-                        "service_fee", self.config_entry.data.get("service_fee", 15.00)
-                    ),
+                    default=self.config_entry.data.get("service_fee", 15.00),
                 ): cv.positive_float,
             }
         )
