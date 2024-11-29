@@ -1,6 +1,6 @@
 """Sensor platform for the Sensus Analytics Integration."""
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -34,7 +34,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     )
 
 
-class DynamicUnitSensorBase(CoordinatorEntity, SensorEntity):
+class UsageConversionMixin:
+    """Mixin to provide usage conversion."""
+    # pylint: disable=too-few-public-methods
+    def _convert_usage(self, usage):
+        """Convert usage based on configuration and native unit."""
+        if usage is None:
+            return None
+        usage_unit = self.coordinator.data.get("usageUnit")
+        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
+            try:
+                return round(float(usage) * CF_TO_GALLON)
+            except (ValueError, TypeError):
+                return None
+        return usage
+
+
+class DynamicUnitSensorBase(UsageConversionMixin, CoordinatorEntity, SensorEntity):
     """Base class for sensors with dynamic units."""
 
     def __init__(self, coordinator, entry):
@@ -50,15 +66,6 @@ class DynamicUnitSensorBase(CoordinatorEntity, SensorEntity):
             model="Water Meter",
         )
 
-    def _convert_usage(self, usage):
-        """Convert usage based on configuration and native unit."""
-        if usage is None:
-            return None
-        usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
-            return round(float(usage) * CF_TO_GALLON)
-        return usage
-
     def _get_usage_unit(self):
         """Determine the unit of measurement for usage sensors."""
         usage_unit = self.coordinator.data.get("usageUnit")
@@ -72,22 +79,25 @@ class DynamicUnitSensorBase(CoordinatorEntity, SensorEntity):
         return self._get_usage_unit()
 
 
-class StaticUnitSensorBase(CoordinatorEntity, SensorEntity):
+class StaticUnitSensorBase(UsageConversionMixin, CoordinatorEntity, SensorEntity):
     """Base class for sensors with static units."""
 
-    def __init__(self, coordinator, entry, unit):
+    def __init__(self, coordinator, entry, unit=None, device_class=None):
         """Initialize the static unit sensor base."""
         super().__init__(coordinator)
         self.coordinator = coordinator
         self.entry = entry
         self._unique_id = f"{DOMAIN}_{entry.entry_id}"
-        self._attr_native_unit_of_measurement = unit
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=DEFAULT_NAME,
             manufacturer="Unknown",
             model="Water Meter",
         )
+        if unit:
+            self._attr_native_unit_of_measurement = unit
+        if device_class:
+            self._attr_device_class = device_class
 
 
 class SensusAnalyticsDailyUsageSensor(DynamicUnitSensorBase):
@@ -143,8 +153,8 @@ class SensusAnalyticsLastReadSensor(StaticUnitSensorBase):
 
     def __init__(self, coordinator, entry):
         """Initialize the last read sensor."""
-        super().__init__(coordinator, entry, unit="UTC")
-        self._attr_name = f"{DEFAULT_NAME} Last Read"
+        super().__init__(coordinator, entry, unit=None, device_class=SensorDeviceClass.TIMESTAMP)
+        self._attr_name = f"{DEFAULT_NAME} Last Read (UTC)"
         self._attr_unique_id = f"{self._unique_id}_last_read"
         self._attr_icon = "mdi:clock-time-nine"
 
@@ -154,7 +164,10 @@ class SensusAnalyticsLastReadSensor(StaticUnitSensorBase):
         last_read_ts = self.coordinator.data.get("lastRead")
         if last_read_ts:
             # Convert milliseconds to seconds for timestamp
-            return dt_util.utc_from_timestamp(last_read_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
+            try:
+                return dt_util.utc_from_timestamp(last_read_ts / 1000)
+            except (ValueError, TypeError):
+                return None
         return None
 
 
@@ -228,8 +241,8 @@ class SensusAnalyticsLatestReadTimeSensor(StaticUnitSensorBase):
 
     def __init__(self, coordinator, entry):
         """Initialize the latest read time sensor."""
-        super().__init__(coordinator, entry, unit="UTC")
-        self._attr_name = f"{DEFAULT_NAME} Latest Read Time"
+        super().__init__(coordinator, entry, unit=None, device_class=SensorDeviceClass.TIMESTAMP)
+        self._attr_name = f"{DEFAULT_NAME} Latest Read Time (UTC)"
         self._attr_unique_id = f"{self._unique_id}_latest_read_time"
         self._attr_icon = "mdi:clock-time-nine"
 
@@ -239,7 +252,10 @@ class SensusAnalyticsLatestReadTimeSensor(StaticUnitSensorBase):
         latest_read_time_ts = self.coordinator.data.get("latestReadTime")
         if latest_read_time_ts:
             # Convert milliseconds to seconds for timestamp
-            return dt_util.utc_from_timestamp(latest_read_time_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
+            try:
+                return dt_util.utc_from_timestamp(latest_read_time_ts / 1000)
+            except (ValueError, TypeError):
+                return None
         return None
 
 
@@ -279,15 +295,6 @@ class SensusAnalyticsBillingCostSensor(StaticUnitSensorBase):
         usage_gallons = self._convert_usage(usage)
         return self._calculate_cost(usage_gallons)
 
-    def _convert_usage(self, usage):
-        """Convert usage based on the configuration and native unit."""
-        if usage is None:
-            return None
-        usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
-            return round(float(usage) * CF_TO_GALLON)
-        return usage
-
     def _calculate_cost(self, usage_gallons):
         """Calculate the billing cost based on tiers and service fee."""
         tier1_gallons = self.coordinator.config_entry.data.get("tier1_gallons")
@@ -298,15 +305,16 @@ class SensusAnalyticsBillingCostSensor(StaticUnitSensorBase):
         service_fee = self.coordinator.config_entry.data.get("service_fee")
 
         cost = service_fee
-        if usage_gallons <= tier1_gallons:
-            cost += usage_gallons * tier1_price
-        elif usage_gallons <= tier1_gallons + tier2_gallons:
-            cost += tier1_gallons * tier1_price
-            cost += (usage_gallons - tier1_gallons) * tier2_price
-        else:
-            cost += tier1_gallons * tier1_price
-            cost += tier2_gallons * tier2_price
-            cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+        if usage_gallons is not None:
+            if usage_gallons <= tier1_gallons:
+                cost += usage_gallons * tier1_price
+            elif usage_gallons <= tier1_gallons + tier2_gallons:
+                cost += tier1_gallons * tier1_price
+                cost += (usage_gallons - tier1_gallons) * tier2_price
+            else:
+                cost += tier1_gallons * tier1_price
+                cost += tier2_gallons * tier2_price
+                cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
 
         return round(cost, 2)
 
@@ -330,15 +338,6 @@ class SensusAnalyticsDailyFeeSensor(StaticUnitSensorBase):
         usage_gallons = self._convert_usage(usage)
         return self._calculate_daily_fee(usage_gallons)
 
-    def _convert_usage(self, usage):
-        """Convert usage based on the configuration and native unit."""
-        if usage is None:
-            return None
-        usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
-            return round(float(usage) * CF_TO_GALLON)
-        return usage
-
     def _calculate_daily_fee(self, usage_gallons):
         """Calculate the daily fee based on tiers."""
         tier1_gallons = self.coordinator.config_entry.data.get("tier1_gallons")
@@ -348,14 +347,15 @@ class SensusAnalyticsDailyFeeSensor(StaticUnitSensorBase):
         tier3_price = self.coordinator.config_entry.data.get("tier3_price")
 
         cost = 0
-        if usage_gallons <= tier1_gallons:
-            cost += usage_gallons * tier1_price
-        elif usage_gallons <= tier1_gallons + tier2_gallons:
-            cost += tier1_gallons * tier1_price
-            cost += (usage_gallons - tier1_gallons) * tier2_price
-        else:
-            cost += tier1_gallons * tier1_price
-            cost += tier2_gallons * tier2_price
-            cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+        if usage_gallons is not None:
+            if usage_gallons <= tier1_gallons:
+                cost += usage_gallons * tier1_price
+            elif usage_gallons <= tier1_gallons + tier2_gallons:
+                cost += tier1_gallons * tier1_price
+                cost += (usage_gallons - tier1_gallons) * tier2_price
+            else:
+                cost += tier1_gallons * tier1_price
+                cost += tier2_gallons * tier2_price
+                cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
 
         return round(cost, 2)
