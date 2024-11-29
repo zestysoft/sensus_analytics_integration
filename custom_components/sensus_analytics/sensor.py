@@ -159,9 +159,7 @@ class SensusAnalyticsLastReadSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, entry):
         """Initialize the last read sensor."""
-        super().__init__(coordinator)
-        self.coordinator = coordinator
-        self.entry = entry
+        super().__init__(coordinator, entry, unit="UTC")
         self._unique_id = f"{DOMAIN}_{entry.entry_id}_last_read"
         self._attr_name = f"{DEFAULT_NAME} Last Read"
         self._attr_icon = "mdi:clock-time-nine"
@@ -260,9 +258,7 @@ class SensusAnalyticsLatestReadTimeSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, entry):
         """Initialize the latest read time sensor."""
-        super().__init__(coordinator)
-        self.coordinator = coordinator
-        self.entry = entry
+        super().__init__(coordinator, entry, unit="UTC")
         self._unique_id = f"{DOMAIN}_{entry.entry_id}_latest_read_time"
         self._attr_name = f"{DEFAULT_NAME} Latest Read Time"
         self._attr_icon = "mdi:clock-time-nine"
