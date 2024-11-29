@@ -330,7 +330,7 @@ class SensusAnalyticsDailyFeeSensor(StaticUnitSensorBase):
     def _calculate_daily_fee(self, usage_gallons):
         """Calculate the daily fee based on tiers."""
         tier1_gallons = self.coordinator.config_entry.data.get("tier1_gallons") or 0
-        tier1_price = self.coordinator.config_entry.data.get("tier1_price") or 0
+        tier1_price = self.coordinator.config_entry.data.get("tier1_price")
         tier2_gallons = self.coordinator.config_entry.data.get("tier2_gallons") or 0
         tier2_price = self.coordinator.config_entry.data.get("tier2_price") or 0
         tier3_price = self.coordinator.config_entry.data.get("tier3_price") or 0
