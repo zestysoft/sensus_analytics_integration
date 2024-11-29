@@ -25,7 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             SensusAnalyticsMeterIdSensor(coordinator, entry),
             SensusAnalyticsMeterLatitudeSensor(coordinator, entry),
             SensusAnalyticsLatestReadUsageSensor(coordinator, entry),
-            SensusAnalyticsLatestReadTimeSensor(coordinator, entry),
             SensusAnalyticsBillingUsageSensor(coordinator, entry),
             SensusAnalyticsBillingCostSensor(coordinator, entry),
             SensusAnalyticsDailyFeeSensor(coordinator, entry),
@@ -155,7 +154,7 @@ class SensusAnalyticsLastReadSensor(StaticUnitSensorBase):
     def __init__(self, coordinator, entry):
         """Initialize the last read sensor."""
         super().__init__(coordinator, entry, unit=None, device_class=SensorDeviceClass.TIMESTAMP)
-        self._attr_name = f"{DEFAULT_NAME} Last Read (UTC)"
+        self._attr_name = f"{DEFAULT_NAME} Last Read"
         self._attr_unique_id = f"{self._unique_id}_last_read"
         self._attr_icon = "mdi:clock-time-nine"
 
@@ -235,29 +234,6 @@ class SensusAnalyticsLatestReadUsageSensor(DynamicUnitSensorBase):
         """Return the state of the sensor."""
         latest_read_usage = self.coordinator.data.get("latestReadUsage")
         return self._convert_usage(latest_read_usage)
-
-
-class SensusAnalyticsLatestReadTimeSensor(StaticUnitSensorBase):
-    """Representation of the latest read time sensor."""
-
-    def __init__(self, coordinator, entry):
-        """Initialize the latest read time sensor."""
-        super().__init__(coordinator, entry, unit=None, device_class=SensorDeviceClass.TIMESTAMP)
-        self._attr_name = f"{DEFAULT_NAME} Latest Read Time (UTC)"
-        self._attr_unique_id = f"{self._unique_id}_latest_read_time"
-        self._attr_icon = "mdi:clock-time-nine"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        latest_read_time_ts = self.coordinator.data.get("latestReadTime")
-        if latest_read_time_ts:
-            # Convert milliseconds to seconds for timestamp
-            try:
-                return dt_util.utc_from_timestamp(latest_read_time_ts / 1000)
-            except (ValueError, TypeError):
-                return None
-        return None
 
 
 class SensusAnalyticsBillingUsageSensor(DynamicUnitSensorBase):
