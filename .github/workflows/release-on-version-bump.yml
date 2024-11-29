@@ -1,8 +1,9 @@
 name: Release on Version Bump
 
 on:
-  pull_request:
-    types: [closed]
+  push:
+    branches:
+      - main
 
 jobs:
   release:
