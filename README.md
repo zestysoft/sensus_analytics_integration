@@ -1,6 +1,27 @@
-# Sensus Analytics Integration
+[![](https://img.shields.io/github/release/zestysoft/sensus_analytics_integration/all.svg?style=for-the-badge)](https://github.com/zestysoft/sensus_analytics_integration/releases)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
+[![](https://img.shields.io/github/license/zestysoft/sensus_analytics_integration?style=for-the-badge)](LICENSE)
+[![](https://img.shields.io/badge/MAINTAINER-%40zestysoft-red?style=for-the-badge)](https://github.com/zestysoft)
+[![](https://img.shields.io/badge/COMMUNITY-FORUM-success?style=for-the-badge)](https://community.home-assistant.io)
+
+# HomeAssistant - Sensus Analytics Integration
 
 A custom Home Assistant integration to monitor your water usage from Sensus Analytics.
+
+## Features
+
+- **Daily Usage**: Monitors daily water usage.
+- **Usage Unit**: Displays the unit of measurement for water usage.
+- **Meter Address**: Shows the address of the water meter.
+- **Last Read**: Timestamp of the last meter reading.
+- **Meter Longitude**: Longitude coordinate of the meter's location.
+- **Meter ID**: Unique identifier for the water meter.
+- **Meter Latitude**: Latitude coordinate of the meter's location.
+- **Latest Read Usage**: Latest cumulative usage recorded by the meter.
+- **Latest Read Time**: Timestamp of the latest reading.
+- **Billing Usage**: Total usage amount that has been billed.
+- **Billing Cost**: Total cost of the billed usage.
+- **Daily Fee**: Daily fee based on usage.
 
 ## Installation via HACS
 
@@ -55,21 +76,6 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
      - **Meter Number**: Your water meter number.
    - Click "**Submit**" to finalize the configuration.
 
-## Features
-
-- **Daily Usage**: Monitors daily water usage.
-- **Usage Unit**: Displays the unit of measurement for water usage.
-- **Meter Address**: Shows the address of the water meter.
-- **Last Read**: Timestamp of the last meter reading.
-- **Meter Longitude**: Longitude coordinate of the meter's location.
-- **Meter ID**: Unique identifier for the water meter.
-- **Meter Latitude**: Latitude coordinate of the meter's location.
-- **Latest Read Usage**: Latest cumulative usage recorded by the meter.
-- **Latest Read Time**: Timestamp of the latest reading.
-- **Billing Usage**: Total usage amount that has been billed.
-- **Billing Cost**: Total cost of the billed usage.
-- **Daily Fee**: Daily fee based on usage.
-
 ## Sensor Entities
 
 Below are the sensor entities created by this integration:
@@ -87,6 +93,13 @@ Below are the sensor entities created by this integration:
 - `sensor.sensus_analytics_billing_cost`: Total cost of the billed usage.
 - `sensor.sensus_analytics_daily_fee`: Daily fee based on usage.
 
+# Be kind
+
+If you like the component, why don't you support me by buying me a coffee?
+It would certainly motivate me to further improve this work.
+
+[![Buy me a coffee!](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/zestysoft)
+
 ## License
 
-[MIT License](LICENSE)
+[Apache 2.0](LICENSE)
