@@ -2,6 +2,7 @@
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -138,15 +139,24 @@ class SensusAnalyticsMeterAddressSensor(StaticUnitSensorBase):
         return self.coordinator.data.get("meterAddress1")
 
 
-class SensusAnalyticsLastReadSensor(StaticUnitSensorBase):
+class SensusAnalyticsLastReadSensor(CoordinatorEntity, SensorEntity):
     """Representation of the last read timestamp sensor."""
 
     def __init__(self, coordinator, entry):
         """Initialize the last read sensor."""
-        super().__init__(coordinator, entry, unit="UTC")
+        super().__init__(coordinator)
+        self.coordinator = coordinator
+        self.entry = entry
+        self._unique_id = f"{DOMAIN}_{entry.entry_id}_last_read"
         self._attr_name = f"{DEFAULT_NAME} Last Read"
-        self._attr_unique_id = f"{self._unique_id}_last_read"
         self._attr_icon = "mdi:clock-time-nine"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=DEFAULT_NAME,
+            manufacturer="Unknown",
+            model="Water Meter",
+        )
+        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
     def native_value(self):
@@ -154,7 +164,7 @@ class SensusAnalyticsLastReadSensor(StaticUnitSensorBase):
         last_read_ts = self.coordinator.data.get("lastRead")
         if last_read_ts:
             # Convert milliseconds to seconds for timestamp
-            return dt_util.utc_from_timestamp(last_read_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
+            return dt_util.utc_from_timestamp(last_read_ts / 1000)
         return None
 
 
@@ -223,15 +233,24 @@ class SensusAnalyticsLatestReadUsageSensor(DynamicUnitSensorBase):
         return self._convert_usage(latest_read_usage)
 
 
-class SensusAnalyticsLatestReadTimeSensor(StaticUnitSensorBase):
+class SensusAnalyticsLatestReadTimeSensor(CoordinatorEntity, SensorEntity):
     """Representation of the latest read time sensor."""
 
     def __init__(self, coordinator, entry):
         """Initialize the latest read time sensor."""
-        super().__init__(coordinator, entry, unit="UTC")
+        super().__init__(coordinator)
+        self.coordinator = coordinator
+        self.entry = entry
+        self._unique_id = f"{DOMAIN}_{entry.entry_id}_latest_read_time"
         self._attr_name = f"{DEFAULT_NAME} Latest Read Time"
-        self._attr_unique_id = f"{self._unique_id}_latest_read_time"
         self._attr_icon = "mdi:clock-time-nine"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=DEFAULT_NAME,
+            manufacturer="Unknown",
+            model="Water Meter",
+        )
+        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
     def native_value(self):
@@ -239,7 +258,7 @@ class SensusAnalyticsLatestReadTimeSensor(StaticUnitSensorBase):
         latest_read_time_ts = self.coordinator.data.get("latestReadTime")
         if latest_read_time_ts:
             # Convert milliseconds to seconds for timestamp
-            return dt_util.utc_from_timestamp(latest_read_time_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
+            return dt_util.utc_from_timestamp(latest_read_time_ts / 1000)
         return None
 
 
