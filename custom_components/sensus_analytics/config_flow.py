@@ -51,15 +51,14 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_ACCOUNT_NUMBER): str,
                 vol.Required(CONF_METER_NUMBER): str,
                 vol.Required("unit_type", default="CF"): vol.In(["CF", "G"]),
-                vol.Required("tier1_gallons", default=7480.52): cv.positive_float,
+                vol.Optional("tier1_gallons"): cv.positive_float,
                 vol.Required("tier1_price", default=0.0128): cv.positive_float,
-                vol.Required("tier2_gallons", default=7480.52): cv.positive_float,
-                vol.Required("tier2_price", default=0.0153): cv.positive_float,
-                vol.Required("tier3_price", default=0.0202): cv.positive_float,
+                vol.Optional("tier2_gallons"): cv.positive_float,
+                vol.Optional("tier2_price"): cv.positive_float,
+                vol.Optional("tier3_price"): cv.positive_float,
                 vol.Required("service_fee", default=15.00): cv.positive_float,
             }
         )
-
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
     async def _test_credentials(self, user_input) -> bool:
@@ -103,52 +102,58 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
             self.hass.config_entries.async_update_entry(self.config_entry, data=user_input)
             return self.async_create_entry(title="", data={})
 
+        # Fetch current configuration data
+        current_data = self.config_entry.data
+
         data_schema = vol.Schema(
             {
                 vol.Required(
                     CONF_BASE_URL,
-                    default=self.config_entry.data.get(CONF_BASE_URL),
+                    default=current_data.get(CONF_BASE_URL),
                 ): str,
                 vol.Required(
                     CONF_USERNAME,
-                    default=self.config_entry.data.get(CONF_USERNAME),
+                    default=current_data.get(CONF_USERNAME),
                 ): str,
                 vol.Required(
                     CONF_PASSWORD,
-                    default=self.config_entry.data.get(CONF_PASSWORD),
+                    default=current_data.get(CONF_PASSWORD),
                 ): str,
                 vol.Required(
                     CONF_ACCOUNT_NUMBER,
-                    default=self.config_entry.data.get(CONF_ACCOUNT_NUMBER),
+                    default=current_data.get(CONF_ACCOUNT_NUMBER),
                 ): str,
                 vol.Required(
                     CONF_METER_NUMBER,
-                    default=self.config_entry.data.get(CONF_METER_NUMBER),
+                    default=current_data.get(CONF_METER_NUMBER),
                 ): str,
-                vol.Required("unit_type", default=self.config_entry.data.get("unit_type", "CF")): vol.In(["CF", "G"]),
                 vol.Required(
+                    "unit_type",
+                    default=current_data.get("unit_type", "CF"),
+                ): vol.In(["CF", "G"]),
+                vol.Optional(
                     "tier1_gallons",
-                    default=self.config_entry.data.get("tier1_gallons", 7480.52),
+                    default=current_data.get("tier1_gallons"),
                 ): cv.positive_float,
                 vol.Required(
                     "tier1_price",
-                    default=self.config_entry.data.get("tier1_price", 0.0128),
+                    default=current_data.get("tier1_price", 0.0128),
                 ): cv.positive_float,
-                vol.Required(
+                vol.Optional(
                     "tier2_gallons",
-                    default=self.config_entry.data.get("tier2_gallons", 7480.52),
+                    default=current_data.get("tier2_gallons"),
                 ): cv.positive_float,
-                vol.Required(
+                vol.Optional(
                     "tier2_price",
-                    default=self.config_entry.data.get("tier2_price", 0.0153),
+                    default=current_data.get("tier2_price"),
                 ): cv.positive_float,
-                vol.Required(
+                vol.Optional(
                     "tier3_price",
-                    default=self.config_entry.data.get("tier3_price", 0.0202),
+                    default=current_data.get("tier3_price"),
                 ): cv.positive_float,
                 vol.Required(
                     "service_fee",
-                    default=self.config_entry.data.get("service_fee", 15.00),
+                    default=current_data.get("service_fee", 15.00),
                 ): cv.positive_float,
             }
         )
