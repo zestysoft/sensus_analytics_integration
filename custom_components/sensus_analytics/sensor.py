@@ -8,14 +8,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import SensusAnalyticsDataUpdateCoordinator
 
 CF_TO_GALLON = 7.48052
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     """Set up the Sensus Analytics sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
@@ -58,20 +55,14 @@ class DynamicUnitSensorBase(CoordinatorEntity, SensorEntity):
         if usage is None:
             return None
         usage_unit = self.coordinator.data.get("usageUnit")
-        if (
-            usage_unit == "CF"
-            and self.coordinator.config_entry.data.get("unit_type") == "G"
-        ):
+        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
             return round(float(usage) * CF_TO_GALLON)
         return usage
 
     def _get_usage_unit(self):
         """Determine the unit of measurement for usage sensors."""
         usage_unit = self.coordinator.data.get("usageUnit")
-        if (
-            usage_unit == "CF"
-            and self.coordinator.config_entry.data.get("unit_type") == "G"
-        ):
+        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
             return "G"
         return usage_unit
 
@@ -187,9 +178,7 @@ class SensusAnalyticsLastReadSensor(CoordinatorEntity, SensorEntity):
         last_read_ts = self.coordinator.data.get("lastRead")
         if last_read_ts:
             # Convert milliseconds to seconds for timestamp
-            return dt_util.utc_from_timestamp(
-                last_read_ts / 1000
-            ).strftime("%Y-%m-%d %H:%M:%S")
+            return dt_util.utc_from_timestamp(last_read_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
         return None
 
 
@@ -290,9 +279,7 @@ class SensusAnalyticsLatestReadTimeSensor(CoordinatorEntity, SensorEntity):
         latest_read_time_ts = self.coordinator.data.get("latestReadTime")
         if latest_read_time_ts:
             # Convert milliseconds to seconds for timestamp
-            return dt_util.utc_from_timestamp(
-                latest_read_time_ts / 1000
-            ).strftime("%Y-%m-%d %H:%M:%S")
+            return dt_util.utc_from_timestamp(latest_read_time_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
         return None
 
 
@@ -338,10 +325,7 @@ class SensusAnalyticsBillingCostSensor(StaticUnitSensorBase):
         if usage is None:
             return None
         usage_unit = self.coordinator.data.get("usageUnit")
-        if (
-            usage_unit == "CF"
-            and self.coordinator.config_entry.data.get("unit_type") == "G"
-        ):
+        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
             return round(float(usage) * CF_TO_GALLON)
         return usage
 
@@ -393,10 +377,7 @@ class SensusAnalyticsDailyFeeSensor(StaticUnitSensorBase):
         if usage is None:
             return None
         usage_unit = self.coordinator.data.get("usageUnit")
-        if (
-            usage_unit == "CF"
-            and self.coordinator.config_entry.data.get("unit_type") == "G"
-        ):
+        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
             return round(float(usage) * CF_TO_GALLON)
         return usage
 
