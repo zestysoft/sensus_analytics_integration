@@ -1,5 +1,7 @@
 """Sensor platform for the Sensus Analytics Integration."""
 
+from datetime import datetime
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -15,33 +17,35 @@ CF_TO_GALLON = 7.48052
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     """Set up the Sensus Analytics sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [
-            SensusAnalyticsDailyUsageSensor(coordinator, entry),
-            SensusAnalyticsUsageUnitSensor(coordinator, entry),
-            SensusAnalyticsMeterAddressSensor(coordinator, entry),
-            SensusAnalyticsLastReadSensor(coordinator, entry),
-            SensusAnalyticsMeterLongitudeSensor(coordinator, entry),
-            SensusAnalyticsMeterIdSensor(coordinator, entry),
-            SensusAnalyticsMeterLatitudeSensor(coordinator, entry),
-            SensusAnalyticsLatestReadUsageSensor(coordinator, entry),
-            SensusAnalyticsBillingUsageSensor(coordinator, entry),
-            SensusAnalyticsBillingCostSensor(coordinator, entry),
-            SensusAnalyticsDailyFeeSensor(coordinator, entry),
-        ],
-        True,
-    )
+    sensors = [
+        SensusAnalyticsDailyUsageSensor(coordinator, entry),
+        SensusAnalyticsUsageUnitSensor(coordinator, entry),
+        SensusAnalyticsMeterAddressSensor(coordinator, entry),
+        SensusAnalyticsLastReadSensor(coordinator, entry),
+        SensusAnalyticsMeterLongitudeSensor(coordinator, entry),
+        SensusAnalyticsMeterIdSensor(coordinator, entry),
+        SensusAnalyticsMeterLatitudeSensor(coordinator, entry),
+        SensusAnalyticsLatestReadUsageSensor(coordinator, entry),
+        SensusAnalyticsBillingUsageSensor(coordinator, entry),
+        SensusAnalyticsBillingCostSensor(coordinator, entry),
+        SensusAnalyticsDailyFeeSensor(coordinator, entry),
+        HourlyUsageSensor(coordinator, entry),
+        RainPerInchPerHourSensor(coordinator, entry),
+        TempPerHourSensor(coordinator, entry),  # Renamed as per your request
+    ]
+    async_add_entities(sensors, True)
 
 
+# pylint: disable=too-few-public-methods
 class UsageConversionMixin:
     """Mixin to provide usage conversion."""
 
-    # pylint: disable=too-few-public-methods
-    def _convert_usage(self, usage):
+    def _convert_usage(self, usage, usage_unit=None):
         """Convert usage based on configuration and native unit."""
         if usage is None:
             return None
-        usage_unit = self.coordinator.data.get("usageUnit")
+        if usage_unit is None:
+            usage_unit = self.coordinator.data.get("usageUnit")
         if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
             try:
                 return round(float(usage) * CF_TO_GALLON)
@@ -360,3 +364,88 @@ class SensusAnalyticsDailyFeeSensor(StaticUnitSensorBase):
                     cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
 
         return round(cost, 2)
+
+
+class HourlyUsageSensor(DynamicUnitSensorBase):
+    """Representation of the hourly usage sensor."""
+
+    def __init__(self, coordinator, entry):
+        """Initialize the hourly usage sensor."""
+        super().__init__(coordinator, entry)
+        self._attr_name = f"{DEFAULT_NAME} Hourly Usage"
+        self._attr_unique_id = f"{self._unique_id}_hourly_usage"
+        self._attr_icon = "mdi:water"
+
+    @property
+    def native_value(self):
+        """Return the current hour's usage from the previous day."""
+        now = datetime.now()
+        target_hour = now.hour
+        hourly_data = self.coordinator.data.get("hourly_usage_data", [])
+        if not hourly_data:
+            return None
+
+        # Find the data corresponding to target_hour from the previous day
+        for entry in hourly_data:
+            entry_time = datetime.fromtimestamp(entry["timestamp"] / 1000)
+            if entry_time.hour == target_hour:
+                usage = entry["usage"]
+                usage_unit = entry.get("usage_unit")
+                return self._convert_usage(usage, usage_unit)
+        return None
+
+
+class RainPerInchPerHourSensor(StaticUnitSensorBase):
+    """Representation of the rain per inch per hour sensor."""
+
+    def __init__(self, coordinator, entry):
+        """Initialize the rain per inch per hour sensor."""
+        super().__init__(coordinator, entry, unit="in")
+        self._attr_name = f"{DEFAULT_NAME} Rain Per Inch Per Hour"
+        self._attr_unique_id = f"{self._unique_id}_rain_per_inch_per_hour"
+        self._attr_icon = "mdi:weather-rainy"
+
+    @property
+    def native_value(self):
+        """Return the current hour's rain data from the previous day."""
+        now = datetime.now()
+        target_hour = now.hour
+        hourly_data = self.coordinator.data.get("hourly_usage_data", [])
+        if not hourly_data:
+            return None
+
+        # Find the data corresponding to target_hour from the previous day
+        for entry in hourly_data:
+            entry_time = datetime.fromtimestamp(entry["timestamp"] / 1000)
+            if entry_time.hour == target_hour:
+                rain = entry["rain"]
+                return rain
+        return None
+
+
+class TempPerHourSensor(StaticUnitSensorBase):
+    """Representation of the temperature per hour sensor."""
+
+    def __init__(self, coordinator, entry):
+        """Initialize the temperature per hour sensor."""
+        super().__init__(coordinator, entry, unit="°F")
+        self._attr_name = f"{DEFAULT_NAME} Temperature Per Hour"
+        self._attr_unique_id = f"{self._unique_id}_temp_per_hour"
+        self._attr_icon = "mdi:thermometer"
+
+    @property
+    def native_value(self):
+        """Return the current hour's temperature from the previous day."""
+        now = datetime.now()
+        target_hour = now.hour
+        hourly_data = self.coordinator.data.get("hourly_usage_data", [])
+        if not hourly_data:
+            return None
+
+        # Find the data corresponding to target_hour from the previous day
+        for entry in hourly_data:
+            entry_time = datetime.fromtimestamp(entry["timestamp"] / 1000)
+            if entry_time.hour == target_hour:
+                temp = entry["temp"]
+                return temp
+        return None

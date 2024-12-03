@@ -97,6 +97,9 @@ Below are the sensor entities created by this integration:
 - `sensor.sensus_analytics_billing_usage`: Total usage amount that has been billed.
 - `sensor.sensus_analytics_billing_cost`: Total cost of the billed usage.
 - `sensor.sensus_analytics_daily_fee`: Daily fee based on usage.
+- `sensor.sensus_analytics_hourly_usage`: Hourly water usage.
+- `sensor.sensus_analytics_rain_per_inch_per_hour`: Rain per inch per hour.
+- `sensor.sensus_analytics_temp_per_hour`: Temperature per hour.
 
 # Be kind
 

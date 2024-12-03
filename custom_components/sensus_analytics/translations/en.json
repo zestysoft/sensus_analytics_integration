@@ -7,37 +7,26 @@
         "data": {
           "base_url": "Base URL",
           "base_url_description": "Enter the base URL for the Sensus Analytics API (e.g., https://api.sensus.com).",
-          
           "username": "Username",
           "username_description": "Enter your Sensus Analytics username.",
-          
           "password": "Password",
           "password_description": "Enter your Sensus Analytics password.",
-          
           "account_number": "Account Number",
           "account_number_description": "Enter your Sensus Analytics account number.",
-          
           "meter_number": "Meter Number",
           "meter_number_description": "Enter your Sensus Analytics meter number.",
-          
           "unit_type": "Unit Type (CF or G)",
           "unit_type_description": "Select the unit type. 'CF' stands for Cubic Feet and 'G' stands for Gallons.",
-          
           "tier1_gallons": "Tier 1 Gallons",
           "tier1_gallons_description": "Enter the number of gallons for Tier 1. Leave blank if not applicable.",
-          
           "tier1_price": "Tier 1 Price",
           "tier1_price_description": "Enter the price per gallon for Tier 1 (e.g., 0.0128).",
-          
           "tier2_gallons": "Tier 2 Gallons",
           "tier2_gallons_description": "Enter the number of gallons for Tier 2. Leave blank if not applicable.",
-          
           "tier2_price": "Tier 2 Price",
           "tier2_price_description": "Enter the price per gallon for Tier 2 (e.g., 0.0150).",
-          
           "tier3_price": "Tier 3 Price",
           "tier3_price_description": "Enter the price per gallon for Tier 3 (e.g., 0.0175).",
-          
           "service_fee": "Service Fee",
           "service_fee_description": "Enter the fixed service fee amount (e.g., 15.00)."
         }
@@ -47,37 +36,26 @@
         "data": {
           "base_url": "Base URL",
           "base_url_description": "Enter the base URL for the Sensus Analytics API (e.g., https://api.sensus.com).",
-          
           "username": "Username",
           "username_description": "Enter your Sensus Analytics username.",
-          
           "password": "Password",
           "password_description": "Enter your Sensus Analytics password.",
-          
           "account_number": "Account Number",
           "account_number_description": "Enter your Sensus Analytics account number.",
-          
           "meter_number": "Meter Number",
           "meter_number_description": "Enter your Sensus Analytics meter number.",
-          
           "unit_type": "Unit Type (CF or G)",
           "unit_type_description": "Select the unit type. 'CF' stands for Cubic Feet and 'G' stands for Gallons.",
-          
           "tier1_gallons": "Tier 1 Gallons",
           "tier1_gallons_description": "Enter the number of gallons for Tier 1. Leave blank if not applicable.",
-          
           "tier1_price": "Tier 1 Price",
           "tier1_price_description": "Enter the price per gallon for Tier 1 (e.g., 0.0128).",
-          
           "tier2_gallons": "Tier 2 Gallons",
           "tier2_gallons_description": "Enter the number of gallons for Tier 2. Leave blank if not applicable.",
-          
           "tier2_price": "Tier 2 Price",
           "tier2_price_description": "Enter the price per gallon for Tier 2 (e.g., 0.0150).",
-          
           "tier3_price": "Tier 3 Price",
           "tier3_price_description": "Enter the price per gallon for Tier 3 (e.g., 0.0175).",
-          
           "service_fee": "Service Fee",
           "service_fee_description": "Enter the fixed service fee amount (e.g., 15.00)."
         }
@@ -88,6 +66,64 @@
     },
     "abort": {
       "already_configured": "This account is already configured."
+    }
+  },
+  "sensor": {
+    "sensus_analytics_daily_usage": {
+      "name": "Daily Usage",
+      "description": "Daily water usage."
+    },
+    "sensus_analytics_usage_unit": {
+      "name": "Usage Unit",
+      "description": "Native Unit of measurement chosen by Sensus Analytics."
+    },
+    "sensus_analytics_meter_address": {
+      "name": "Meter Address",
+      "description": "Street address of the water meter."
+    },
+    "sensus_analytics_last_read": {
+      "name": "Last Read",
+      "description": "Timestamp of the last meter reading."
+    },
+    "sensus_analytics_meter_longitude": {
+      "name": "Meter Longitude",
+      "description": "Longitude coordinate of the meter's location."
+    },
+    "sensus_analytics_meter_id": {
+      "name": "Meter ID",
+      "description": "Unique identifier for the water meter."
+    },
+    "sensus_analytics_meter_latitude": {
+      "name": "Meter Latitude",
+      "description": "Latitude coordinate of the meter's location."
+    },
+    "sensus_analytics_latest_read_usage": {
+      "name": "Latest Read Usage",
+      "description": "Latest cumulative usage recorded by the meter."
+    },
+    "sensus_analytics_billing_usage": {
+      "name": "Billing Usage",
+      "description": "Total usage amount that has been billed."
+    },
+    "sensus_analytics_billing_cost": {
+      "name": "Billing Cost",
+      "description": "Total cost of the billed usage."
+    },
+    "sensus_analytics_daily_fee": {
+      "name": "Daily Fee",
+      "description": "Daily fee based on usage."
+    },
+    "sensus_analytics_hourly_usage": {
+      "name": "Hourly Usage",
+      "description": "Hourly water usage."
+    },
+    "sensus_analytics_rain_per_inch_per_hour": {
+      "name": "Rain Per Inch Per Hour",
+      "description": "Rain per inch per hour."
+    },
+    "sensus_analytics_temp_per_hour": {
+      "name": "Temperature Per Hour",
+      "description": "Temperature per hour."
     }
   }
 }
