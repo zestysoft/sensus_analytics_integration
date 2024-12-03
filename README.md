@@ -17,10 +17,14 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
 - **Meter Longitude**: Longitude coordinate of the meter's location.
 - **Meter ID**: Unique identifier for the water meter.
 - **Meter Latitude**: Latitude coordinate of the meter's location.
-- **Latest Read Usage**: Latest cumulative usage recorded by the meter.
+- **Usage Odometer**: The total cumulative usage recorded by the meter.
 - **Billing Usage**: Total usage amount that has been billed.
 - **Billing Cost**: Total cost of the billed usage.
 - **Daily Fee**: Daily fee based on usage.
+- **Hourly Usage**: Water usage for the current hour from the previous day.
+- **Rain Per Inch Per Hour**: Rainfall data (in inches) for the current hour from the previous day.
+- **Temperature Per Hour**: Temperature data (in °F) for the current hour from the previous day.
+- **Hourly Timestamp**: Timestamp of the current hour's data from the previous day.
 
 ## Installation via HACS
 
@@ -87,19 +91,20 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
 Below are the sensor entities created by this integration:
 
 - `sensor.sensus_analytics_daily_usage`: Daily water usage.
-- `sensor.sensus_analytics_usage_unit`: Native Unit of measurement chosen by Sensus Analytics.
+- `sensor.sensus_analytics_usage_unit`: Native unit of measurement chosen by Sensus Analytics.
 - `sensor.sensus_analytics_meter_address`: Street address of the water meter.
 - `sensor.sensus_analytics_last_read`: Timestamp of the last meter reading.
 - `sensor.sensus_analytics_meter_longitude`: Longitude coordinate of the meter's location.
 - `sensor.sensus_analytics_meter_id`: Unique identifier for the water meter.
 - `sensor.sensus_analytics_meter_latitude`: Latitude coordinate of the meter's location.
-- `sensor.sensus_analytics_latest_read_usage`: Latest cumulative usage recorded by the meter.
+- `sensor.sensus_analytics_usage_odometer`: Total cumulative usage recorded by the meter.
 - `sensor.sensus_analytics_billing_usage`: Total usage amount that has been billed.
 - `sensor.sensus_analytics_billing_cost`: Total cost of the billed usage.
 - `sensor.sensus_analytics_daily_fee`: Daily fee based on usage.
-- `sensor.sensus_analytics_hourly_usage`: Hourly water usage.
-- `sensor.sensus_analytics_rain_per_inch_per_hour`: Rain per inch per hour.
-- `sensor.sensus_analytics_temp_per_hour`: Temperature per hour.
+- `sensor.sensus_analytics_hourly_usage`: Hourly water usage for the current hour from the previous day.
+- `sensor.sensus_analytics_rain_per_inch_per_hour`: Rainfall per inch for the current hour from the previous day.
+- `sensor.sensus_analytics_temp_per_hour`: Temperature for the current hour from the previous day.
+- `sensor.sensus_analytics_hourly_timestamp`: Timestamp of the current hour's data from the previous day.
 
 # Be kind
 
