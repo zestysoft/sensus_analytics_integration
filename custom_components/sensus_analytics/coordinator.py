@@ -2,10 +2,12 @@
 
 import logging
 from datetime import datetime, timedelta
+from urllib.parse import urljoin  # Import urljoin
 
 import requests
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util  # Import HA's datetime utilities
 
 from .const import CONF_ACCOUNT_NUMBER, CONF_BASE_URL, CONF_METER_NUMBER, CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
@@ -48,7 +50,9 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
 
             # Fetch hourly data
             _LOGGER.debug("Fetching hourly data")
-            target_date = datetime.now() - timedelta(days=1)
+            local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
+            now_local = datetime.now(local_tz)
+            target_date = now_local - timedelta(days=1)
             hourly_data = self._retrieve_hourly_data(session, target_date)
             if hourly_data:
                 data["hourly_usage_data"] = hourly_data
@@ -67,8 +71,10 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
         """Create and return an authenticated session."""
         session = requests.Session()
         # Authenticate and get session cookie
+        login_url = urljoin(self.base_url, "j_spring_security_check")
+        _LOGGER.debug("Authentication URL: %s", login_url)
         r_sec = session.post(
-            f"{self.base_url}/j_spring_security_check",
+            login_url,
             data={"j_username": self.username, "j_password": self.password},
             allow_redirects=False,
             timeout=10,
@@ -83,8 +89,10 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _fetch_daily_data(self, session):
         """Fetch daily meter data."""
+        widget_url = urljoin(self.base_url, "water/widget/byPage")
+        _LOGGER.debug("Widget URL: %s", widget_url)
         response = session.post(
-            f"{self.base_url}/water/widget/byPage",
+            widget_url,
             json={
                 "group": "meters",
                 "accountNumber": self.account_number,
@@ -106,6 +114,9 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
         start_ts, end_ts = self._get_start_end_timestamps(target_date)
         usage_url, params = self._construct_hourly_data_request(start_ts, end_ts)
 
+        _LOGGER.debug("Hourly data request URL: %s", usage_url)
+        _LOGGER.debug("Hourly data request parameters: %s", params)
+
         try:
             response = session.get(usage_url, params=params, timeout=10)
             response.raise_for_status()  # Ensure the request was successful
@@ -125,22 +136,27 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _get_start_end_timestamps(self, target_date):
         """Get start and end timestamps in milliseconds for the target date."""
-        start_dt = datetime.combine(target_date, datetime.min.time())
-        end_dt = datetime.combine(target_date, datetime.max.time())
+        # Use HA's local timezone
+        local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
 
+        # Start and end of the day in local time with timezone
+        start_dt = datetime.combine(target_date, datetime.min.time(), tzinfo=local_tz)
+        end_dt = datetime.combine(target_date, datetime.max.time(), tzinfo=local_tz)
+
+        # Convert to timestamps in milliseconds
         start_ts = int(start_dt.timestamp() * 1000)
         end_ts = int(end_dt.timestamp() * 1000)
         return start_ts, end_ts
 
     def _construct_hourly_data_request(self, start_ts, end_ts):
         """Construct the hourly data request URL and parameters."""
-        usage_url = f"{self.base_url}/water/usage/{self.account_number}/{self.meter_number}"
+        usage_url = urljoin(self.base_url, f"water/usage/{self.account_number}/{self.meter_number}")
         params = {
             "start": start_ts,
             "end": end_ts,
             "zoom": "day",
             "page": "null",
-            "weather": "1",  # As per URL parameter expectations
+            "weather": "1",
         }
         return usage_url, params
 
