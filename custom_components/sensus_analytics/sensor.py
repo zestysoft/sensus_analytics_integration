@@ -25,13 +25,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         SensusAnalyticsMeterLongitudeSensor(coordinator, entry),
         SensusAnalyticsMeterIdSensor(coordinator, entry),
         SensusAnalyticsMeterLatitudeSensor(coordinator, entry),
-        SensusAnalyticsLatestReadUsageSensor(coordinator, entry),
+        UsageOdometerSensor(coordinator, entry),
         SensusAnalyticsBillingUsageSensor(coordinator, entry),
         SensusAnalyticsBillingCostSensor(coordinator, entry),
         SensusAnalyticsDailyFeeSensor(coordinator, entry),
         HourlyUsageSensor(coordinator, entry),
         RainPerInchPerHourSensor(coordinator, entry),
-        TempPerHourSensor(coordinator, entry),  # Renamed as per your request
+        TempPerHourSensor(coordinator, entry),
+        HourlyTimestampSensor(coordinator, entry),
     ]
     async_add_entities(sensors, True)
 
@@ -157,7 +158,12 @@ class SensusAnalyticsLastReadSensor(StaticUnitSensorBase):
 
     def __init__(self, coordinator, entry):
         """Initialize the last read sensor."""
-        super().__init__(coordinator, entry, unit=None, device_class=SensorDeviceClass.TIMESTAMP)
+        super().__init__(
+            coordinator,
+            entry,
+            unit=None,
+            device_class=SensorDeviceClass.TIMESTAMP,
+        )
         self._attr_name = f"{DEFAULT_NAME} Last Read"
         self._attr_unique_id = f"{self._unique_id}_last_read"
         self._attr_icon = "mdi:clock-time-nine"
@@ -223,14 +229,14 @@ class SensusAnalyticsMeterLatitudeSensor(StaticUnitSensorBase):
         return self.coordinator.data.get("meterLat")
 
 
-class SensusAnalyticsLatestReadUsageSensor(DynamicUnitSensorBase):
-    """Representation of the latest read usage sensor."""
+class UsageOdometerSensor(DynamicUnitSensorBase):
+    """Representation of the usage odometer sensor (previously latest read usage)."""
 
     def __init__(self, coordinator, entry):
-        """Initialize the latest read usage sensor."""
+        """Initialize the usage odometer sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{DEFAULT_NAME} Latest Read Usage"
-        self._attr_unique_id = f"{self._unique_id}_latest_read_usage"
+        self._attr_name = f"{DEFAULT_NAME} Usage Odometer"
+        self._attr_unique_id = f"{self._unique_id}_usage_odometer"
         self._attr_icon = "mdi:water"
 
     @property
@@ -448,4 +454,39 @@ class TempPerHourSensor(StaticUnitSensorBase):
             if entry_time.hour == target_hour:
                 temp = entry["temp"]
                 return temp
+        return None
+
+
+class HourlyTimestampSensor(StaticUnitSensorBase):
+    """Representation of the hourly timestamp sensor."""
+
+    def __init__(self, coordinator, entry):
+        """Initialize the hourly timestamp sensor."""
+        super().__init__(
+            coordinator,
+            entry,
+            unit=None,
+            device_class=SensorDeviceClass.TIMESTAMP,
+        )
+        self._attr_name = f"{DEFAULT_NAME} Hourly Timestamp"
+        self._attr_unique_id = f"{self._unique_id}_hourly_timestamp"
+        self._attr_icon = "mdi:clock-time-nine"
+
+    @property
+    def native_value(self):
+        """Return the timestamp of the current hour's data from the previous day."""
+        now = datetime.now()
+        target_hour = now.hour
+        hourly_data = self.coordinator.data.get("hourly_usage_data", [])
+        if not hourly_data:
+            return None
+
+        # Find the data corresponding to target_hour from the previous day
+        for entry in hourly_data:
+            entry_timestamp_ms = entry["timestamp"]
+            entry_time = datetime.fromtimestamp(entry_timestamp_ms / 1000)
+            if entry_time.hour == target_hour:
+                # Convert milliseconds to seconds and return as UTC datetime
+                timestamp = dt_util.utc_from_timestamp(entry_timestamp_ms / 1000)
+                return timestamp
         return None
