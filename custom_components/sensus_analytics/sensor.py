@@ -14,9 +14,7 @@ from .const import DEFAULT_NAME, DOMAIN
 CF_TO_GALLON = 7.48052
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     """Set up the Sensus Analytics sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = [
@@ -49,10 +47,7 @@ class UsageConversionMixin:
             return None
         if usage_unit is None:
             usage_unit = self.coordinator.data.get("usageUnit")
-        if (
-            usage_unit == "CF"
-            and self.coordinator.config_entry.data.get("unit_type") == "G"
-        ):
+        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
             try:
                 return round(float(usage) * CF_TO_GALLON)
             except (ValueError, TypeError):
@@ -79,10 +74,7 @@ class DynamicUnitSensorBase(UsageConversionMixin, CoordinatorEntity, SensorEntit
     def _get_usage_unit(self):
         """Determine the unit of measurement for usage sensors."""
         usage_unit = self.coordinator.data.get("usageUnit")
-        if (
-            usage_unit == "CF"
-            and self.coordinator.config_entry.data.get("unit_type") == "G"
-        ):
+        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
             return "G"
         return usage_unit
 
@@ -321,9 +313,7 @@ class SensusAnalyticsBillingCostSensor(StaticUnitSensorBase):
                 else:
                     cost += tier1_gallons * tier1_price
                     cost += tier2_gallons * tier2_price
-                    cost += (
-                        usage_gallons - tier1_gallons - tier2_gallons
-                    ) * tier3_price
+                    cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
 
         return round(cost, 2)
 
@@ -377,9 +367,7 @@ class SensusAnalyticsDailyFeeSensor(StaticUnitSensorBase):
                 else:
                     cost += tier1_gallons * tier1_price
                     cost += tier2_gallons * tier2_price
-                    cost += (
-                        usage_gallons - tier1_gallons - tier2_gallons
-                    ) * tier3_price
+                    cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
 
         return round(cost, 2)
 

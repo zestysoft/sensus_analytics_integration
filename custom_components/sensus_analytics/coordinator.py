@@ -9,14 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util  # Import HA's datetime utilities
 
-from .const import (
-    CONF_ACCOUNT_NUMBER,
-    CONF_BASE_URL,
-    CONF_METER_NUMBER,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from .const import CONF_ACCOUNT_NUMBER, CONF_BASE_URL, CONF_METER_NUMBER, CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,9 +81,7 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
         )
         # Check if login was successful
         if r_sec.status_code != 302:
-            _LOGGER.error(
-                "Authentication failed with status code %s", r_sec.status_code
-            )
+            _LOGGER.error("Authentication failed with status code %s", r_sec.status_code)
             raise UpdateFailed("Authentication failed")
 
         _LOGGER.debug("Authentication successful")
@@ -159,9 +150,7 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _construct_hourly_data_request(self, start_ts, end_ts):
         """Construct the hourly data request URL and parameters."""
-        usage_url = urljoin(
-            self.base_url, f"water/usage/{self.account_number}/{self.meter_number}"
-        )
+        usage_url = urljoin(self.base_url, f"water/usage/{self.account_number}/{self.meter_number}")
         params = {
             "start": start_ts,
             "end": end_ts,
