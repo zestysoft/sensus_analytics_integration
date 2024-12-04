@@ -384,8 +384,9 @@ class LastHourUsageSensor(DynamicUnitSensorBase):
 
     @property
     def native_value(self):
-        """Return the current hour's usage from the previous day."""
-        now = datetime.now()
+        """Return the usage for the current hour from the previous day."""
+        local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
+        now = datetime.now(local_tz)
         target_hour = now.hour
         hourly_data = self.coordinator.data.get("hourly_usage_data", [])
         if not hourly_data:
@@ -393,7 +394,7 @@ class LastHourUsageSensor(DynamicUnitSensorBase):
 
         # Find the data corresponding to target_hour from the previous day
         for entry in hourly_data:
-            entry_time = datetime.fromtimestamp(entry["timestamp"] / 1000)
+            entry_time = dt_util.utc_from_timestamp(entry["timestamp"] / 1000).astimezone(local_tz)
             if entry_time.hour == target_hour:
                 usage = entry["usage"]
                 usage_unit = entry.get("usage_unit")
@@ -413,16 +414,16 @@ class LastHourRainfallSensor(StaticUnitSensorBase):
 
     @property
     def native_value(self):
-        """Return the current hour's rain data from the previous day."""
-        now = datetime.now()
+        """Return the rainfall for the current hour from the previous day."""
+        local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
+        now = datetime.now(local_tz)
         target_hour = now.hour
         hourly_data = self.coordinator.data.get("hourly_usage_data", [])
         if not hourly_data:
             return None
 
-        # Find the data corresponding to target_hour from the previous day
         for entry in hourly_data:
-            entry_time = datetime.fromtimestamp(entry["timestamp"] / 1000)
+            entry_time = dt_util.utc_from_timestamp(entry["timestamp"] / 1000).astimezone(local_tz)
             if entry_time.hour == target_hour:
                 rain = entry["rain"]
                 return rain
@@ -441,16 +442,16 @@ class LastHourTemperatureSensor(StaticUnitSensorBase):
 
     @property
     def native_value(self):
-        """Return the current hour's temperature from the previous day."""
-        now = datetime.now()
+        """Return the temperature for the current hour from the previous day."""
+        local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
+        now = datetime.now(local_tz)
         target_hour = now.hour
         hourly_data = self.coordinator.data.get("hourly_usage_data", [])
         if not hourly_data:
             return None
 
-        # Find the data corresponding to target_hour from the previous day
         for entry in hourly_data:
-            entry_time = datetime.fromtimestamp(entry["timestamp"] / 1000)
+            entry_time = dt_util.utc_from_timestamp(entry["timestamp"] / 1000).astimezone(local_tz)
             if entry_time.hour == target_hour:
                 temp = entry["temp"]
                 return temp
@@ -469,18 +470,18 @@ class LastHourTimestampSensor(StaticUnitSensorBase):
 
     @property
     def native_value(self):
-        """Return the human-readable timestamp of the current hour's data from the previous day."""
-        now = datetime.now()
+        """Return the timestamp for the current hour's data from the previous day."""
+        local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
+        now = datetime.now(local_tz)
         target_hour = now.hour
         hourly_data = self.coordinator.data.get("hourly_usage_data", [])
         if not hourly_data:
             return None
 
-        # Find the data corresponding to target_hour from the previous day
         for entry in hourly_data:
             entry_timestamp_ms = entry["timestamp"]
-            entry_time = datetime.fromtimestamp(entry_timestamp_ms / 1000)
+            entry_time = dt_util.utc_from_timestamp(entry_timestamp_ms / 1000).astimezone(local_tz)
             if entry_time.hour == target_hour:
-                # Return entry_time as human-readable local datetime
+                # Return the timestamp as a formatted string
                 return entry_time.strftime("%Y-%m-%d %H:%M:%S")
         return None
