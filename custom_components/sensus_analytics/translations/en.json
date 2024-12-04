@@ -124,6 +124,14 @@
     "sensus_analytics_temp_per_hour": {
       "name": "Temperature Per Hour",
       "description": "Temperature per hour."
+    },
+    "sensus_analytics_meter_odometer": {
+      "name": "Meter Odometer",
+      "description": "Total cumulative usage recorded by the meter."
+    },
+    "sensus_analytics_hourly_timestamp": {
+      "name": "Hourly Timestamp",
+      "description": "Timestamp of the current hour's data from the previous day."
     }
   }
 }
