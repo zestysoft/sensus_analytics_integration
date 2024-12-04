@@ -21,10 +21,10 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
 - **Billing Usage**: Total usage amount that has been billed.
 - **Billing Cost**: Total cost of the billed usage.
 - **Daily Fee**: Daily fee based on usage.
-- **Hourly Usage**: Water usage for the current hour from the previous day.
-- **Rain Per Inch Per Hour**: Rainfall data (in inches) for the current hour from the previous day.
-- **Temperature Per Hour**: Temperature data (in °F) for the current hour from the previous day.
-- **Hourly Timestamp**: Timestamp of the current hour's data from the previous day.
+- **Last Hour Usage**: Water usage for the last hour from the previous day.
+- **Last Hour Rainfall**: Rainfall data (in inches) for the last hour from the previous day.
+- **Last Hour Temperature**: Temperature data (in °F) for the last hour from the previous day.
+- **Last Hour Timestamp**: Timestamp of the last hour's data from the previous day.
 
 ## Installation via HACS
 
@@ -101,10 +101,10 @@ Below are the sensor entities created by this integration:
 - `sensor.sensus_analytics_billing_usage`: Total usage amount that has been billed.
 - `sensor.sensus_analytics_billing_cost`: Total cost of the billed usage.
 - `sensor.sensus_analytics_daily_fee`: Daily fee based on usage.
-- `sensor.sensus_analytics_hourly_usage`: Hourly water usage for the current hour from the previous day.
-- `sensor.sensus_analytics_rain_per_inch_per_hour`: Rainfall per inch for the current hour from the previous day.
-- `sensor.sensus_analytics_temp_per_hour`: Temperature for the current hour from the previous day.
-- `sensor.sensus_analytics_hourly_timestamp`: Timestamp of the current hour's data from the previous day.
+- `sensor.sensus_analytics_last_hour_usage`: Water usage for the last hour from the previous day.
+- `sensor.sensus_analytics_last_hour_rainfall`: Rainfall for the last hour from the previous day.
+- `sensor.sensus_analytics_last_hour_temperature`: Temperature for the last hour from the previous day.
+- `sensor.sensus_analytics_last_hour_timestamp`: Timestamp of the last hour's data from the previous day.
 
 # Be kind
 
