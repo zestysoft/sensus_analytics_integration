@@ -11,7 +11,14 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_ACCOUNT_NUMBER, CONF_BASE_URL, CONF_METER_NUMBER, CONF_PASSWORD, CONF_USERNAME, DOMAIN
+from .const import (
+    CONF_ACCOUNT_NUMBER,
+    CONF_BASE_URL,
+    CONF_METER_NUMBER,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,14 +40,18 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             _LOGGER.debug("User input: %s", user_input)
             # Set a unique ID based on account and meter number
-            unique_id = f"{user_input[CONF_ACCOUNT_NUMBER]}_{user_input[CONF_METER_NUMBER]}"
+            unique_id = (
+                f"{user_input[CONF_ACCOUNT_NUMBER]}_{user_input[CONF_METER_NUMBER]}"
+            )
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
             # Validate the user input (e.g., test the connection)
             valid = await self._test_credentials(user_input)
             if valid:
-                return self.async_create_entry(title="Sensus Analytics", data=user_input)
+                return self.async_create_entry(
+                    title="Sensus Analytics", data=user_input
+                )
             errors["base"] = "auth"
 
         data_schema = vol.Schema(
@@ -59,7 +70,9 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required("service_fee", default=15.00): cv.positive_float,
             }
         )
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
+        return self.async_show_form(
+            step_id="user", data_schema=data_schema, errors=errors
+        )
 
     async def _test_credentials(self, user_input) -> bool:
         """Test if the provided credentials are valid."""
@@ -99,7 +112,9 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             _LOGGER.debug("User updated options: %s", user_input)
             # Update the entry with new options
-            self.hass.config_entries.async_update_entry(self.config_entry, data=user_input)
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=user_input
+            )
             return self.async_create_entry(title="", data={})
 
         # Fetch current configuration data

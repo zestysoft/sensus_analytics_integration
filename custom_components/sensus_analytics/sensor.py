@@ -14,7 +14,9 @@ from .const import DEFAULT_NAME, DOMAIN
 CF_TO_GALLON = 7.48052
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up the Sensus Analytics sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = [
@@ -25,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         SensusAnalyticsMeterLongitudeSensor(coordinator, entry),
         SensusAnalyticsMeterIdSensor(coordinator, entry),
         SensusAnalyticsMeterLatitudeSensor(coordinator, entry),
-        UsageOdometerSensor(coordinator, entry),
+        MeterOdometerSensor(coordinator, entry),
         SensusAnalyticsBillingUsageSensor(coordinator, entry),
         SensusAnalyticsBillingCostSensor(coordinator, entry),
         SensusAnalyticsDailyFeeSensor(coordinator, entry),
@@ -47,7 +49,10 @@ class UsageConversionMixin:
             return None
         if usage_unit is None:
             usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
+        if (
+            usage_unit == "CF"
+            and self.coordinator.config_entry.data.get("unit_type") == "G"
+        ):
             try:
                 return round(float(usage) * CF_TO_GALLON)
             except (ValueError, TypeError):
@@ -74,7 +79,10 @@ class DynamicUnitSensorBase(UsageConversionMixin, CoordinatorEntity, SensorEntit
     def _get_usage_unit(self):
         """Determine the unit of measurement for usage sensors."""
         usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
+        if (
+            usage_unit == "CF"
+            and self.coordinator.config_entry.data.get("unit_type") == "G"
+        ):
             return "G"
         return usage_unit
 
@@ -229,14 +237,14 @@ class SensusAnalyticsMeterLatitudeSensor(StaticUnitSensorBase):
         return self.coordinator.data.get("meterLat")
 
 
-class UsageOdometerSensor(DynamicUnitSensorBase):
-    """Representation of the usage odometer sensor (previously latest read usage)."""
+class MeterOdometerSensor(DynamicUnitSensorBase):
+    """Representation of the meter odometer sensor (previously latest read usage)."""
 
     def __init__(self, coordinator, entry):
-        """Initialize the usage odometer sensor."""
+        """Initialize the meter odometer sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{DEFAULT_NAME} Usage Odometer"
-        self._attr_unique_id = f"{self._unique_id}_usage_odometer"
+        self._attr_name = f"{DEFAULT_NAME} Meter Odometer"
+        self._attr_unique_id = f"{self._unique_id}_meter_odometer"
         self._attr_icon = "mdi:water"
 
     @property
@@ -313,7 +321,9 @@ class SensusAnalyticsBillingCostSensor(StaticUnitSensorBase):
                 else:
                     cost += tier1_gallons * tier1_price
                     cost += tier2_gallons * tier2_price
-                    cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+                    cost += (
+                        usage_gallons - tier1_gallons - tier2_gallons
+                    ) * tier3_price
 
         return round(cost, 2)
 
@@ -367,7 +377,9 @@ class SensusAnalyticsDailyFeeSensor(StaticUnitSensorBase):
                 else:
                     cost += tier1_gallons * tier1_price
                     cost += tier2_gallons * tier2_price
-                    cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+                    cost += (
+                        usage_gallons - tier1_gallons - tier2_gallons
+                    ) * tier3_price
 
         return round(cost, 2)
 
@@ -462,19 +474,14 @@ class HourlyTimestampSensor(StaticUnitSensorBase):
 
     def __init__(self, coordinator, entry):
         """Initialize the hourly timestamp sensor."""
-        super().__init__(
-            coordinator,
-            entry,
-            unit=None,
-            device_class=SensorDeviceClass.TIMESTAMP,
-        )
+        super().__init__(coordinator, entry, unit=None)
         self._attr_name = f"{DEFAULT_NAME} Hourly Timestamp"
         self._attr_unique_id = f"{self._unique_id}_hourly_timestamp"
         self._attr_icon = "mdi:clock-time-nine"
 
     @property
     def native_value(self):
-        """Return the timestamp of the current hour's data from the previous day."""
+        """Return the human-readable timestamp of the current hour's data from the previous day."""
         now = datetime.now()
         target_hour = now.hour
         hourly_data = self.coordinator.data.get("hourly_usage_data", [])
@@ -486,7 +493,7 @@ class HourlyTimestampSensor(StaticUnitSensorBase):
             entry_timestamp_ms = entry["timestamp"]
             entry_time = datetime.fromtimestamp(entry_timestamp_ms / 1000)
             if entry_time.hour == target_hour:
-                # Convert milliseconds to seconds and return as UTC datetime
+                # Convert milliseconds to seconds and return as human-readable datetime
                 timestamp = dt_util.utc_from_timestamp(entry_timestamp_ms / 1000)
-                return timestamp
+                return timestamp.strftime("%Y-%m-%d %H:%M:%S")
         return None

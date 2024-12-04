@@ -17,7 +17,7 @@ A custom Home Assistant integration to monitor your water usage from Sensus Anal
 - **Meter Longitude**: Longitude coordinate of the meter's location.
 - **Meter ID**: Unique identifier for the water meter.
 - **Meter Latitude**: Latitude coordinate of the meter's location.
-- **Usage Odometer**: The total cumulative usage recorded by the meter.
+- **Meter Odometer**: The total cumulative usage recorded by the meter.
 - **Billing Usage**: Total usage amount that has been billed.
 - **Billing Cost**: Total cost of the billed usage.
 - **Daily Fee**: Daily fee based on usage.
@@ -97,7 +97,7 @@ Below are the sensor entities created by this integration:
 - `sensor.sensus_analytics_meter_longitude`: Longitude coordinate of the meter's location.
 - `sensor.sensus_analytics_meter_id`: Unique identifier for the water meter.
 - `sensor.sensus_analytics_meter_latitude`: Latitude coordinate of the meter's location.
-- `sensor.sensus_analytics_usage_odometer`: Total cumulative usage recorded by the meter.
+- `sensor.sensus_analytics_meter_odometer`: Total cumulative usage recorded by the meter.
 - `sensor.sensus_analytics_billing_usage`: Total usage amount that has been billed.
 - `sensor.sensus_analytics_billing_cost`: Total cost of the billed usage.
 - `sensor.sensus_analytics_daily_fee`: Daily fee based on usage.
