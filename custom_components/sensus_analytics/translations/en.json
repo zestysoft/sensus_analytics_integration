@@ -113,17 +113,21 @@
       "name": "Daily Fee",
       "description": "Daily fee based on usage."
     },
-    "sensus_analytics_hourly_usage": {
-      "name": "Hourly Usage",
-      "description": "Hourly water usage."
+    "sensus_analytics_last_hour_usage": {
+      "name": "Last Hour Usage",
+      "description": "Water usage for the last hour."
     },
-    "sensus_analytics_rain_per_inch_per_hour": {
-      "name": "Rain Per Inch Per Hour",
-      "description": "Rain per inch per hour."
+    "sensus_analytics_last_hour_rainfall": {
+      "name": "Last Hour Rainfall",
+      "description": "Rainfall for the last hour."
     },
-    "sensus_analytics_temp_per_hour": {
-      "name": "Temperature Per Hour",
-      "description": "Temperature per hour."
+    "sensus_analytics_last_hour_temperature": {
+      "name": "Last Hour Temperature",
+      "description": "Temperature for the last hour."
+    },
+    "sensus_analytics_last_hour_timestamp": {
+      "name": "Last Hour Timestamp",
+      "description": "Timestamp of the last hour's data from the previous day."
     },
     "sensus_analytics_meter_odometer": {
       "name": "Meter Odometer",
@@ -131,7 +135,7 @@
     },
     "sensus_analytics_hourly_timestamp": {
       "name": "Hourly Timestamp",
-      "description": "Timestamp of the current hour's data from the previous day."
+      "description": "Timestamp of the last hour's data from the previous day."
     }
   }
 }

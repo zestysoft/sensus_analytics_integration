@@ -29,10 +29,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         SensusAnalyticsBillingUsageSensor(coordinator, entry),
         SensusAnalyticsBillingCostSensor(coordinator, entry),
         SensusAnalyticsDailyFeeSensor(coordinator, entry),
-        HourlyUsageSensor(coordinator, entry),
-        RainPerInchPerHourSensor(coordinator, entry),
-        TempPerHourSensor(coordinator, entry),
-        HourlyTimestampSensor(coordinator, entry),
+        LastHourUsageSensor(coordinator, entry),
+        LastHourRainfallSensor(coordinator, entry),
+        LastHourTemperatureSensor(coordinator, entry),
+        LastHourTimestampSensor(coordinator, entry),
     ]
     async_add_entities(sensors, True)
 
@@ -372,14 +372,14 @@ class SensusAnalyticsDailyFeeSensor(StaticUnitSensorBase):
         return round(cost, 2)
 
 
-class HourlyUsageSensor(DynamicUnitSensorBase):
-    """Representation of the hourly usage sensor."""
+class LastHourUsageSensor(DynamicUnitSensorBase):
+    """Representation of the last hour usage sensor."""
 
     def __init__(self, coordinator, entry):
-        """Initialize the hourly usage sensor."""
+        """Initialize the last hour usage sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{DEFAULT_NAME} Hourly Usage"
-        self._attr_unique_id = f"{self._unique_id}_hourly_usage"
+        self._attr_name = f"{DEFAULT_NAME} Last Hour Usage"
+        self._attr_unique_id = f"{self._unique_id}_last_hour_usage"
         self._attr_icon = "mdi:water"
 
     @property
@@ -401,14 +401,14 @@ class HourlyUsageSensor(DynamicUnitSensorBase):
         return None
 
 
-class RainPerInchPerHourSensor(StaticUnitSensorBase):
-    """Representation of the rain per inch per hour sensor."""
+class LastHourRainfallSensor(StaticUnitSensorBase):
+    """Representation of the last hour rainfall sensor."""
 
     def __init__(self, coordinator, entry):
-        """Initialize the rain per inch per hour sensor."""
+        """Initialize the last hour rainfall sensor."""
         super().__init__(coordinator, entry, unit="in")
-        self._attr_name = f"{DEFAULT_NAME} Rain Per Inch Per Hour"
-        self._attr_unique_id = f"{self._unique_id}_rain_per_inch_per_hour"
+        self._attr_name = f"{DEFAULT_NAME} Last Hour Rainfall"
+        self._attr_unique_id = f"{self._unique_id}_last_hour_rainfall"
         self._attr_icon = "mdi:weather-rainy"
 
     @property
@@ -429,14 +429,14 @@ class RainPerInchPerHourSensor(StaticUnitSensorBase):
         return None
 
 
-class TempPerHourSensor(StaticUnitSensorBase):
-    """Representation of the temperature per hour sensor."""
+class LastHourTemperatureSensor(StaticUnitSensorBase):
+    """Representation of the last hour temperature sensor."""
 
     def __init__(self, coordinator, entry):
-        """Initialize the temperature per hour sensor."""
+        """Initialize the last hour temperature sensor."""
         super().__init__(coordinator, entry, unit="°F")
-        self._attr_name = f"{DEFAULT_NAME} Temperature Per Hour"
-        self._attr_unique_id = f"{self._unique_id}_temp_per_hour"
+        self._attr_name = f"{DEFAULT_NAME} Last Hour Temperature"
+        self._attr_unique_id = f"{self._unique_id}_last_hour_temperature"
         self._attr_icon = "mdi:thermometer"
 
     @property
@@ -457,14 +457,14 @@ class TempPerHourSensor(StaticUnitSensorBase):
         return None
 
 
-class HourlyTimestampSensor(StaticUnitSensorBase):
-    """Representation of the hourly timestamp sensor."""
+class LastHourTimestampSensor(StaticUnitSensorBase):
+    """Representation of the last hour timestamp sensor."""
 
     def __init__(self, coordinator, entry):
-        """Initialize the hourly timestamp sensor."""
+        """Initialize the last hour timestamp sensor."""
         super().__init__(coordinator, entry, unit=None)
-        self._attr_name = f"{DEFAULT_NAME} Hourly Timestamp"
-        self._attr_unique_id = f"{self._unique_id}_hourly_timestamp"
+        self._attr_name = f"{DEFAULT_NAME} Last Hour Timestamp"
+        self._attr_unique_id = f"{self._unique_id}_last_hour_timestamp"
         self._attr_icon = "mdi:clock-time-nine"
 
     @property
@@ -481,7 +481,6 @@ class HourlyTimestampSensor(StaticUnitSensorBase):
             entry_timestamp_ms = entry["timestamp"]
             entry_time = datetime.fromtimestamp(entry_timestamp_ms / 1000)
             if entry_time.hour == target_hour:
-                # Convert milliseconds to seconds and return as human-readable datetime
-                timestamp = dt_util.utc_from_timestamp(entry_timestamp_ms / 1000)
-                return timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                # Return entry_time as human-readable local datetime
+                return entry_time.strftime("%Y-%m-%d %H:%M:%S")
         return None
