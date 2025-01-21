@@ -2,12 +2,12 @@
 
 import logging
 from datetime import datetime, timedelta
-from urllib.parse import urljoin  # Import urljoin
+from urllib.parse import urljoin
 
 import requests
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util  # Import HA's datetime utilities
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_ACCOUNT_NUMBER, CONF_BASE_URL, CONF_METER_NUMBER, CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
@@ -119,7 +119,7 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             response = session.get(usage_url, params=params, timeout=10)
-            response.raise_for_status()  # Ensure the request was successful
+            response.raise_for_status()
             hourly_data = response.json()
             _LOGGER.debug("Hourly data response: %s", hourly_data)
 
@@ -177,7 +177,7 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
             return None
 
         # The first element contains units
-        units = usage_list[0]  # ["CF", "INCHES", "FAHRENHEIT", "CF"]
+        units = usage_list[0]  # ["CCF", "INCHES", "FAHRENHEIT", "gal"]
         usage_unit = units[0]
         rain_unit = units[1]
         temp_unit = units[2]
