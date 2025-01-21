@@ -48,7 +48,7 @@ class UsageConversionMixin:
             return None
         if usage_unit is None:
             usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
+        if usage_unit == "CCF" and self.coordinator.config_entry.data.get("unit_type") == "gal":
             try:
                 return round(float(usage) * CF_TO_GALLON)
             except (ValueError, TypeError):
@@ -75,8 +75,8 @@ class DynamicUnitSensorBase(UsageConversionMixin, CoordinatorEntity, SensorEntit
     def _get_usage_unit(self):
         """Determine the unit of measurement for usage sensors."""
         usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "G":
-            return "G"
+        if usage_unit == "CCF" and self.coordinator.config_entry.data.get("unit_type") == "gal":
+            return "gal"
         return usage_unit
 
     @property

@@ -100,6 +100,9 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
             _LOGGER.debug("User updated options: %s", user_input)
             # Update the entry with new options
             self.hass.config_entries.async_update_entry(self.config_entry, data=user_input)
+            # Force a sensor refresh
+            coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
+            await coordinator.async_request_refresh()
             return self.async_create_entry(title="", data={})
 
         # Fetch current configuration data
