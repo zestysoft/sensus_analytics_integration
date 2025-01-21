@@ -50,7 +50,7 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD): str,
                 vol.Required(CONF_ACCOUNT_NUMBER): str,
                 vol.Required(CONF_METER_NUMBER): str,
-                vol.Required("unit_type", default="CF"): vol.In(["CF", "G"]),
+                vol.Required("unit_type", default="CCF"): vol.In(["CCF", "gal"]),
                 vol.Optional("tier1_gallons"): cv.positive_float,
                 vol.Required("tier1_price", default=0.0128): cv.positive_float,
                 vol.Optional("tier2_gallons"): cv.positive_float,
@@ -129,8 +129,8 @@ class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
                 ): str,
                 vol.Required(
                     "unit_type",
-                    default=current_data.get("unit_type", "CF"),
-                ): vol.In(["CF", "G"]),
+                    default=current_data.get("unit_type", "CCF"),
+                ): vol.In(["CCF", "gal"]),
                 vol.Optional(
                     "tier1_gallons",
                     default=current_data.get("tier1_gallons"),
