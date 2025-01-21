@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -116,6 +116,7 @@ class SensusAnalyticsDailyUsageSensor(DynamicUnitSensorBase):
         self._attr_unique_id = f"{self._unique_id}_daily_usage"
         self._attr_icon = "mdi:water"
         self._attr_device_class = SensorDeviceClass.WATER
+        self._attr_state_class = SensorStateClass.TOTAL
 
     @property
     def native_value(self):
@@ -241,6 +242,7 @@ class MeterOdometerSensor(DynamicUnitSensorBase):
         self._attr_unique_id = f"{self._unique_id}_meter_odometer"
         self._attr_icon = "mdi:water"
         self._attr_device_class = SensorDeviceClass.WATER
+        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def native_value(self):
@@ -259,6 +261,7 @@ class SensusAnalyticsBillingUsageSensor(DynamicUnitSensorBase):
         self._attr_unique_id = f"{self._unique_id}_billing_usage"
         self._attr_icon = "mdi:water"
         self._attr_device_class = SensorDeviceClass.WATER
+        self._attr_state_class = SensorStateClass.TOTAL
 
     @property
     def native_value(self):
@@ -386,6 +389,7 @@ class LastHourUsageSensor(DynamicUnitSensorBase):
         self._attr_unique_id = f"{self._unique_id}_last_hour_usage"
         self._attr_icon = "mdi:water"
         self._attr_device_class = SensorDeviceClass.WATER
+        self._attr_state_class = SensorStateClass.TOTAL
 
     @property
     def native_value(self):
