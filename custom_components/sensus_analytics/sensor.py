@@ -1,6 +1,6 @@
 """Sensor platform for the Sensus Analytics Integration."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
@@ -117,6 +117,11 @@ class SensusAnalyticsDailyUsageSensor(DynamicUnitSensorBase):
         self._attr_icon = "mdi:water"
         self._attr_device_class = SensorDeviceClass.WATER
         self._attr_state_class = SensorStateClass.TOTAL
+
+    @property
+    def last_reset(self):
+        """Return the last reset time for the daily usage sensor."""
+        return dt_util.start_of_local_day()
 
     @property
     def native_value(self):
@@ -245,6 +250,11 @@ class MeterOdometerSensor(DynamicUnitSensorBase):
         self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
+    def last_reset(self):
+        """Return the last reset time for the meter odometer sensor."""
+        return None  # Odometer typically does not reset
+
+    @property
     def native_value(self):
         """Return the state of the sensor."""
         latest_read_usage = self.coordinator.data.get("latestReadUsage")
@@ -262,6 +272,13 @@ class SensusAnalyticsBillingUsageSensor(DynamicUnitSensorBase):
         self._attr_icon = "mdi:water"
         self._attr_device_class = SensorDeviceClass.WATER
         self._attr_state_class = SensorStateClass.TOTAL
+
+    @property
+    def last_reset(self):
+        """Return the last reset time for the billing usage sensor."""
+        local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
+        now = datetime.now(local_tz)
+        return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     @property
     def native_value(self):
@@ -390,6 +407,13 @@ class LastHourUsageSensor(DynamicUnitSensorBase):
         self._attr_icon = "mdi:water"
         self._attr_device_class = SensorDeviceClass.WATER
         self._attr_state_class = SensorStateClass.TOTAL
+
+    @property
+    def last_reset(self):
+        """Return the last reset time for the last hour usage sensor."""
+        local_tz = dt_util.get_time_zone(self.hass.config.time_zone)
+        now = datetime.now(local_tz)
+        return now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
 
     @property
     def native_value(self):
