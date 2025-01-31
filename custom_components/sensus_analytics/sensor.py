@@ -48,12 +48,31 @@ class UsageConversionMixin:
             return None
         if usage_unit is None:
             usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "gal":
+
+        config_unit_type = self.coordinator.config_entry.data.get("unit_type")
+
+        if usage_unit == "CF" and config_unit_type == "gal":
             try:
                 return round(float(usage) * CF_TO_GALLON)
             except (ValueError, TypeError):
                 return None
+        elif usage_unit == "GAL" and config_unit_type == "CF":
+            try:
+                return round(float(usage) / CF_TO_GALLON)
+            except (ValueError, TypeError):
+                return None
         return usage
+
+    def _get_usage_unit(self):
+        """Determine the unit of measurement for usage sensors."""
+        usage_unit = self.coordinator.data.get("usageUnit")
+        config_unit_type = self.coordinator.config_entry.data.get("unit_type")
+
+        if usage_unit == "CF" and config_unit_type == "gal":
+            return "gal"
+        elif usage_unit == "GAL" and config_unit_type == "CF":
+            return "CF"
+        return usage_unit
 
 
 class DynamicUnitSensorBase(UsageConversionMixin, CoordinatorEntity, SensorEntity):
@@ -71,13 +90,6 @@ class DynamicUnitSensorBase(UsageConversionMixin, CoordinatorEntity, SensorEntit
             manufacturer="Unknown",
             model="Water Meter",
         )
-
-    def _get_usage_unit(self):
-        """Determine the unit of measurement for usage sensors."""
-        usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "gal":
-            return "gal"
-        return usage_unit
 
     @property
     def native_unit_of_measurement(self):
