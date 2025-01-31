@@ -42,18 +42,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class UsageConversionMixin:
     """Mixin to provide usage conversion."""
 
+    # pylint: disable=too-many-return-statements
     def _convert_usage(self, usage, usage_unit=None):
         """Convert usage based on configuration and native unit."""
         if usage is None:
             return None
         if usage_unit is None:
             usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "gal":
+
+        config_unit_type = self.coordinator.config_entry.data.get("unit_type")
+
+        if usage_unit == "CF" and config_unit_type == "gal":
             try:
                 return round(float(usage) * CF_TO_GALLON)
             except (ValueError, TypeError):
                 return None
+        elif usage_unit == "GAL" and config_unit_type == "CF":
+            try:
+                return round(float(usage) / CF_TO_GALLON)
+            except (ValueError, TypeError):
+                return None
+        elif usage_unit == "GAL" and config_unit_type == "gal":
+            return usage
         return usage
+
+    def _get_usage_unit(self):
+        """Determine the unit of measurement for usage sensors."""
+        usage_unit = self.coordinator.data.get("usageUnit")
+        config_unit_type = self.coordinator.config_entry.data.get("unit_type")
+
+        if usage_unit == "CF" and config_unit_type == "gal":
+            return "gal"
+        if usage_unit == "GAL" and config_unit_type == "CF":
+            return "CF"
+        if usage_unit == "GAL" and config_unit_type == "gal":
+            return "gal"
+        return usage_unit
 
 
 class DynamicUnitSensorBase(UsageConversionMixin, CoordinatorEntity, SensorEntity):
@@ -71,13 +95,6 @@ class DynamicUnitSensorBase(UsageConversionMixin, CoordinatorEntity, SensorEntit
             manufacturer="Unknown",
             model="Water Meter",
         )
-
-    def _get_usage_unit(self):
-        """Determine the unit of measurement for usage sensors."""
-        usage_unit = self.coordinator.data.get("usageUnit")
-        if usage_unit == "CF" and self.coordinator.config_entry.data.get("unit_type") == "gal":
-            return "gal"
-        return usage_unit
 
     @property
     def native_unit_of_measurement(self):
