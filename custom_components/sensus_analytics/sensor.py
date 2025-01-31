@@ -42,6 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class UsageConversionMixin:
     """Mixin to provide usage conversion."""
 
+    # pylint: disable=too-many-return-statements
     def _convert_usage(self, usage, usage_unit=None):
         """Convert usage based on configuration and native unit."""
         if usage is None:
@@ -72,9 +73,9 @@ class UsageConversionMixin:
 
         if usage_unit == "CF" and config_unit_type == "gal":
             return "gal"
-        elif usage_unit == "GAL" and config_unit_type == "CF":
+        if usage_unit == "GAL" and config_unit_type == "CF":
             return "CF"
-        elif usage_unit == "GAL" and config_unit_type == "gal":
+        if usage_unit == "GAL" and config_unit_type == "gal":
             return "gal"
         return usage_unit
 
