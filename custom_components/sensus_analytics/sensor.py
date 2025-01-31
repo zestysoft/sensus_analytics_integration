@@ -61,6 +61,8 @@ class UsageConversionMixin:
                 return round(float(usage) / CF_TO_GALLON)
             except (ValueError, TypeError):
                 return None
+        elif usage_unit == "GAL" and config_unit_type == "gal":
+            return usage
         return usage
 
     def _get_usage_unit(self):
@@ -72,6 +74,8 @@ class UsageConversionMixin:
             return "gal"
         elif usage_unit == "GAL" and config_unit_type == "CF":
             return "CF"
+        elif usage_unit == "GAL" and config_unit_type == "gal":
+            return "gal"
         return usage_unit
 
 
