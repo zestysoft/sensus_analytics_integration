@@ -12,6 +12,7 @@ from homeassistant.util import dt as dt_util
 from .const import DEFAULT_NAME, DOMAIN
 
 CF_TO_GALLON = 7.48052
+CF_PER_CCF = 100  # 1 CCF = 100 cubic feet
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
@@ -52,32 +53,39 @@ class UsageConversionMixin:
 
         config_unit_type = self.coordinator.config_entry.data.get("unit_type")
 
+        try:
+            usage_float = float(usage)
+        except (ValueError, TypeError):
+            return None
+
+        # CF (cubic feet) conversions
         if usage_unit == "CF" and config_unit_type == "gal":
-            try:
-                return round(float(usage) * CF_TO_GALLON)
-            except (ValueError, TypeError):
-                return None
-        elif usage_unit == "GAL" and config_unit_type == "CF":
-            try:
-                return round(float(usage) / CF_TO_GALLON)
-            except (ValueError, TypeError):
-                return None
-        elif usage_unit == "GAL" and config_unit_type == "gal":
+            return round(usage_float * CF_TO_GALLON)
+        if usage_unit == "CF" and config_unit_type == "CCF":
+            return round(usage_float / CF_PER_CCF, 2)
+
+        # GAL (gallons) conversions
+        if usage_unit == "GAL" and config_unit_type == "gal":
             return usage
+        if usage_unit == "GAL" and config_unit_type == "CCF":
+            # Convert gallons to cubic feet, then to CCF
+            return round(usage_float / CF_TO_GALLON / CF_PER_CCF, 2)
+
         return usage
 
     def _get_usage_unit(self):
         """Determine the unit of measurement for usage sensors."""
-        usage_unit = self.coordinator.data.get("usageUnit")
         config_unit_type = self.coordinator.config_entry.data.get("unit_type")
 
-        if usage_unit == "CF" and config_unit_type == "gal":
+        # Return the user's configured unit type
+        # The _convert_usage method handles the actual value conversion
+        if config_unit_type == "gal":
             return "gal"
-        if usage_unit == "GAL" and config_unit_type == "CF":
-            return "CF"
-        if usage_unit == "GAL" and config_unit_type == "gal":
-            return "gal"
-        return usage_unit
+        if config_unit_type == "CCF":
+            return "CCF"
+
+        # Fallback to API-reported unit if config is unexpected
+        return self.coordinator.data.get("usageUnit")
 
 
 class DynamicUnitSensorBase(UsageConversionMixin, CoordinatorEntity, SensorEntity):
