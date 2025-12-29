@@ -1,2 +1,2 @@
 aiohttp==3.12.14
-homeassistant==2024.11.3
+homeassistant==2025.12

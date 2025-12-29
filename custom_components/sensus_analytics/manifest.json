@@ -1,13 +1,13 @@
 {
   "domain": "sensus_analytics",
   "name": "Sensus Analytics Integration",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "documentation": "https://github.com/zestysoft/sensus_analytics_integration",
   "dependencies": [],
   "codeowners": ["@zestysoft"],
   "requirements": [
-    "aiohttp>=3.8.1",
-    "homeassistant>=2024.11.3"
+    "aiohttp>=3.12.14",
+    "homeassistant>=2025.12"
   ],
   "iot_class": "cloud_polling",
   "config_flow": true
