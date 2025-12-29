@@ -82,17 +82,13 @@ class SensusAnalyticsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(_config_entry):
         """Get the options flow for this handler."""
-        return SensusAnalyticsOptionsFlow(config_entry)
+        return SensusAnalyticsOptionsFlow()
 
 
 class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
     """Handle Sensus Analytics options."""
-
-    def __init__(self, config_entry):
-        """Initialize SensusAnalytics options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
