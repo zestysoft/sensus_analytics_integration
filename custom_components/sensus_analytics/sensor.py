@@ -321,6 +321,8 @@ class SensusAnalyticsBillingCostSensor(StaticUnitSensorBase):
         self._attr_name = f"{DEFAULT_NAME} Billing Cost"
         self._attr_unique_id = f"{self._unique_id}_billing_cost"
         self._attr_icon = "mdi:currency-usd"
+        self._attr_device_class = SensorDeviceClass.MONETARY
+        self._attr_state_class = SensorStateClass.TOTAL
 
     @property
     def native_value(self):
@@ -376,6 +378,8 @@ class SensusAnalyticsDailyFeeSensor(StaticUnitSensorBase):
         self._attr_name = f"{DEFAULT_NAME} Daily Fee"
         self._attr_unique_id = f"{self._unique_id}_daily_fee"
         self._attr_icon = "mdi:currency-usd"
+        self._attr_device_class = SensorDeviceClass.MONETARY
+        self._attr_state_class = SensorStateClass.TOTAL
 
     @property
     def native_value(self):
