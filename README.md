@@ -1,117 +1,145 @@
-[![](https://img.shields.io/github/release/zestysoft/sensus_analytics_integration/all.svg?style=for-the-badge)](https://github.com/zestysoft/sensus_analytics_integration/releases)
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
-[![](https://img.shields.io/github/license/zestysoft/sensus_analytics_integration?style=for-the-badge)](LICENSE)
-[![](https://img.shields.io/badge/MAINTAINER-%40zestysoft-red?style=for-the-badge)](https://github.com/zestysoft)
-[![](https://img.shields.io/badge/COMMUNITY-FORUM-success?style=for-the-badge)](https://community.home-assistant.io)
+# Sensus Analytics Integration
 
-# HomeAssistant - Sensus Analytics Integration
+[![GitHub Release][releases-shield]][releases]
+[![GitHub Activity][commits-shield]][commits]
+[![License][license-shield]](LICENSE)
+[![hacs][hacsbadge]][hacs]
+![Project Maintenance][maintenance-shield]
 
-A custom Home Assistant integration to monitor your water usage from Sensus Analytics.
+A custom Home Assistant integration that monitors water usage from Sensus Analytics.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/zestysoft/sensus_analytics_integration?quickstart=1)
 
 ## Features
 
-- **Daily Usage**: Monitors daily water usage.
-- **Usage Unit**: Displays the unit of measurement for water usage.
-- **Meter Address**: Shows the address of the water meter.
-- **Last Read**: Timestamp of the last meter reading.
-- **Meter Longitude**: Longitude coordinate of the meter's location.
-- **Meter ID**: Unique identifier for the water meter.
-- **Meter Latitude**: Latitude coordinate of the meter's location.
-- **Meter Odometer**: The total cumulative usage recorded by the meter.
-- **Billing Usage**: Total usage amount that has been billed.
-- **Billing Cost**: Total cost of the billed usage.
-- **Daily Fee**: Daily fee based on usage.
-- **Last Hour Usage**: Water usage for the last hour from the previous day.
-- **Last Hour Rainfall**: Rainfall data (in inches) for the last hour from the previous day.
-- **Last Hour Temperature**: Temperature data (in °F) for the last hour from the previous day.
-- **Last Hour Timestamp**: Timestamp of the last hour's data from the previous day.
+- Daily water usage
+- Native and configurable usage units
+- Meter address, ID, latitude, and longitude
+- Last meter read timestamp
+- Meter odometer and billing usage
+- Estimated billing cost and daily usage fee from tiered pricing
+- Last-hour usage, rainfall, temperature, and timestamp from the previous day
+- UI setup, reconfiguration, reauthentication, and options flow
+- Manual `sensus_analytics.reload_data` service
 
-## Installation via HACS
+**This integration sets up the following platform.**
 
-### **Prerequisites**
+| Platform | Description                                                               |
+| -------- | ------------------------------------------------------------------------- |
+| `sensor` | Water usage, meter details, billing estimates, and hourly comparison data |
 
-- **HACS (Home Assistant Community Store)**: Make sure HACS is installed in your Home Assistant instance. If not, follow the [HACS Installation Guide](https://hacs.xyz/docs/installation/prerequisites).
+## Quick Start
 
-### **Steps to Install**
+### Step 1: Install the Integration
 
-1. **Open Home Assistant UI**
+This integration requires [HACS](https://hacs.xyz/) to be installed.
 
-   Navigate to your Home Assistant instance in your web browser.
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=zestysoft&repository=sensus_analytics_integration&category=integration)
 
-2. **Access HACS**
+Then:
 
-   - Click on "**HACS**" in the sidebar.
+1. Click **Download** to install the integration.
+2. Restart Home Assistant.
 
-3. **Add Custom Repository**
+<details>
+<summary><strong>Manual Installation</strong></summary>
 
-   - In HACS, go to the "**Integrations**" tab.
-   - Click on the "**⋮**" (three dots) menu in the top right corner and select "**Custom repositories**".
+1. Download the `custom_components/sensus_analytics/` folder from this repository.
+2. Copy it to your Home Assistant `custom_components/` directory.
+3. Restart Home Assistant.
 
-4. **Add the Sensus Analytics Repository**
+</details>
 
-   - **Repository URL**: `https://github.com/zestysoft/sensus_analytics_integration`
-   - **Category**: Select "**Integration**" from the dropdown menu.
-   - Click "**Add**".
+### Step 2: Add and Configure the Integration
 
-5. **Install the Integration**
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=sensus_analytics)
 
-   - After adding the repository, return to the "**Integrations**" tab in HACS.
-   - Search for "**Sensus Analytics Integration**".
-   - Click on the integration and then click "**Install**".
-   - Wait for HACS to download and install the integration. You should see a confirmation message once it's complete.
+The setup flow asks for:
 
-6. **Restart Home Assistant**
+| Name           | Required | Description                                                                             |
+| -------------- | -------- | --------------------------------------------------------------------------------------- |
+| Base URL       | Yes      | Your Sensus Analytics site URL, for example `https://<your_city>.sensus-analytics.com/` |
+| Username       | Yes      | Your Sensus Analytics username                                                          |
+| Password       | Yes      | Your Sensus Analytics password                                                          |
+| Account Number | Yes      | Your Sensus Analytics account number                                                    |
+| Meter Number   | Yes      | Your water meter number                                                                 |
+| Unit Type      | Yes      | Display usage as `CCF` or `gal`                                                         |
+| Tier 1 Gallons | No       | Gallons charged at tier 1 before tier 2 starts                                          |
+| Tier 1 Price   | Yes      | Tier 1 price per gallon                                                                 |
+| Tier 2 Gallons | No       | Gallons charged at tier 2 before tier 3 starts                                          |
+| Tier 2 Price   | No       | Tier 2 price per gallon                                                                 |
+| Tier 3 Price   | No       | Tier 3 price per gallon                                                                 |
+| Service Fee    | Yes      | Fixed service fee for billing estimates                                                 |
 
-   - After installation, it's essential to restart Home Assistant to load the new integration.
-   - Go to "**Configuration**" > "**Settings**" > "**System**" > "**Restart**".
-   - Confirm the restart.
+### Step 3: Adjust Options
 
-7. **Configure the Integration via Home Assistant UI**
+After setup, use **Settings** -> **Devices & Services** -> **Sensus Analytics** -> **Configure** to update:
 
-   - Once Home Assistant has restarted, navigate to "**Configuration**" > "**Integrations**".
-   - Click the "**+ Add Integration**" button in the bottom right corner.
-   - Search for "**Sensus Analytics**" and select "**Sensus Analytics Integration**".
-   - Follow the prompts to enter your credentials and settings:
-     - **Base URL**: Enter the base URL for your Sensus Analytics API (e.g., `https://<your_city>.sensus-analytics.com/`).
-     - **Username**: Your Sensus Analytics account username.
-     - **Password**: Your Sensus Analytics account password.
-     - **Account Number**: Your Sensus Analytics account number.
-     - **Meter Number**: Your water meter number.
-     - **Unit Type**: Choose which unit type you want the data to be used by Home Assistant.
-     - **Tier 1 Gallons Cutoff**: Number of gallons before transitioning to tier 2 pricing.
-     - **Tier 1 Per Gallon Price**: Price per gallon (not unit or CF) at tier 1 level.
-     - **Tier 2 Gallons Cutoff**: Number of gallons before transitioning to tier 3 pricing.
-     - **Tier 2 Per Gallon Price**: Price per gallon (not unit or CF) at tier 2 level.
-     - **Tier 3 Per Gallon Price**: Price per gallon (not unit or CF) at tier 3 level.
-     - **Service Fee**: Price the water company charges just to have service.
-   - Click "**Submit**" to finalize the configuration.
+- Display unit
+- Tiered pricing
+- Service fee
+- Update interval
+
+Use **Reconfigure** to update the URL, credentials, account number, or meter number.
 
 ## Sensor Entities
 
-Below are the sensor entities created by this integration:
+- `sensor.sensus_analytics_daily_usage`
+- `sensor.sensus_analytics_usage_unit`
+- `sensor.sensus_analytics_meter_address`
+- `sensor.sensus_analytics_last_read`
+- `sensor.sensus_analytics_meter_longitude`
+- `sensor.sensus_analytics_meter_id`
+- `sensor.sensus_analytics_meter_latitude`
+- `sensor.sensus_analytics_meter_odometer`
+- `sensor.sensus_analytics_billing_usage`
+- `sensor.sensus_analytics_billing_cost`
+- `sensor.sensus_analytics_daily_fee`
+- `sensor.sensus_analytics_last_hour_usage`
+- `sensor.sensus_analytics_last_hour_rainfall`
+- `sensor.sensus_analytics_last_hour_temperature`
+- `sensor.sensus_analytics_last_hour_timestamp`
 
-- `sensor.sensus_analytics_daily_usage`: Daily water usage.
-- `sensor.sensus_analytics_usage_unit`: Native unit of measurement chosen by Sensus Analytics.
-- `sensor.sensus_analytics_meter_address`: Street address of the water meter.
-- `sensor.sensus_analytics_last_read`: Timestamp of the last meter reading.
-- `sensor.sensus_analytics_meter_longitude`: Longitude coordinate of the meter's location.
-- `sensor.sensus_analytics_meter_id`: Unique identifier for the water meter.
-- `sensor.sensus_analytics_meter_latitude`: Latitude coordinate of the meter's location.
-- `sensor.sensus_analytics_meter_odometer`: Total cumulative usage recorded by the meter.
-- `sensor.sensus_analytics_billing_usage`: Total usage amount that has been billed.
-- `sensor.sensus_analytics_billing_cost`: Total cost of the billed usage.
-- `sensor.sensus_analytics_daily_fee`: Daily fee based on usage.
-- `sensor.sensus_analytics_last_hour_usage`: Water usage for the last hour from the previous day.
-- `sensor.sensus_analytics_last_hour_rainfall`: Rainfall for the last hour from the previous day.
-- `sensor.sensus_analytics_last_hour_temperature`: Temperature for the last hour from the previous day.
-- `sensor.sensus_analytics_last_hour_timestamp`: Timestamp of the last hour's data from the previous day.
+## Services
 
-# Be kind
+### `sensus_analytics.reload_data`
 
-If you like the integration, how about buying me a coffee? :)
+Manually refresh data for all loaded Sensus Analytics entries.
+
+```yaml
+service: sensus_analytics.reload_data
+```
+
+## Development
+
+This repository follows the current `jpawlowski/hacs.integration_blueprint` structure for development tooling.
+
+Useful commands:
+
+```bash
+script/setup/bootstrap
+script/lint-check
+script/type-check
+script/test
+script/hassfest
+script/check
+```
+
+## Support
+
+If you like the integration, how about buying me a coffee?
 
 [![Buy me a coffee!](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/zestysoft)
 
 ## License
 
 [Apache 2.0](LICENSE)
+
+[commits-shield]: https://img.shields.io/github/commit-activity/y/zestysoft/sensus_analytics_integration.svg?style=for-the-badge
+[commits]: https://github.com/zestysoft/sensus_analytics_integration/commits/main
+[hacs]: https://github.com/hacs/integration
+[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/zestysoft/sensus_analytics_integration.svg?style=for-the-badge
+[maintenance-shield]: https://img.shields.io/badge/maintainer-%40zestysoft-blue.svg?style=for-the-badge
+[releases-shield]: https://img.shields.io/github/release/zestysoft/sensus_analytics_integration.svg?style=for-the-badge
+[releases]: https://github.com/zestysoft/sensus_analytics_integration/releases
