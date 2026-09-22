@@ -352,10 +352,11 @@ See `.github/instructions/blueprint.entities.instructions.md` for entity pattern
 
 **Repairs:**
 
-- Create `repairs.py` in integration root (Gold Quality Scale)
+- Create `repairs.py` in integration root only when the integration raises actionable repair issues
 - Use `async_create_issue()` with severity levels (WARNING, ERROR, CRITICAL)
 - Implement `RepairsFlow` for guided user fixes
 - Delete issues after successful repair
+- Do not keep an empty placeholder `repairs.py`; Home Assistant treats the file as a platform and logs an error if it does not implement the repairs API
 
 See `.github/instructions/blueprint.repairs.instructions.md` for comprehensive patterns.
 
