@@ -67,7 +67,7 @@ elif command -v copilot >/dev/null 2>&1; then
 fi
 
 if [[ -z "$COPILOT_BIN" ]]; then
-    die "GitHub Copilot CLI not found. Install with: npm install @github/copilot"
+    die "GitHub Copilot CLI not found. Run: npm ci"
 fi
 
 require_command jq "apt-get install jq"
