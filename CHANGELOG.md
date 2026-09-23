@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/zestysoft/sensus_analytics_integration/compare/v1.8.2...v1.9.0) (2026-09-23)
+
+
+### Features
+
+* import hourly water usage into Energy statistics at the hour it was used ([#107](https://github.com/zestysoft/sensus_analytics_integration/issues/107)) ([08fdabd](https://github.com/zestysoft/sensus_analytics_integration/commit/08fdabd074102a5fd9121ad2052c0bcc4cf5ecf5))
+
 ## [1.8.2](https://github.com/zestysoft/sensus_analytics_integration/compare/v1.8.1...v1.8.2) (2026-09-23)
 
 
