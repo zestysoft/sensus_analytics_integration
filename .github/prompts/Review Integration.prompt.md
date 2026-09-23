@@ -163,7 +163,7 @@ requests.get(url)
 **Code Comments:**
 
 - [ ] Why, not what (code shows what)
-- [ ] References to ADRs or documentation
+- [ ] References to relevant documentation
 - [ ] Warnings about non-obvious behavior
 - [ ] TODOs have context and issue numbers
 
@@ -171,7 +171,6 @@ requests.get(url)
 
 - [ ] `docs/user/GETTING_STARTED.md` exists and is clear
 - [ ] `docs/user/CONFIGURATION.md` covers all options
-- [ ] `docs/development/ARCHITECTURE.md` reflects current design
 - [ ] `AGENTS.md` is up to date with project patterns
 - [ ] `icons.json` used for entity and action icons (not hardcoded)
 
@@ -370,4 +369,3 @@ Reference project-specific patterns and standards.
 1. Present findings with priorities
 2. Ask: "Which issues should I address first?"
 3. Offer to create implementation plan for fixes
-4. Suggest creating ADRs for architectural improvements

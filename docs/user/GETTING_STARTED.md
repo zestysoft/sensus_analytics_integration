@@ -13,12 +13,15 @@ This guide covers installation and first setup for the Sensus Analytics Integrat
 
 ### Via HACS
 
-1. Open HACS in Home Assistant.
-2. Go to **Integrations**.
-3. Add this custom repository:
-   `https://github.com/zestysoft/sensus_analytics_integration`
-4. Set the category to **Integration**.
-5. Download **Sensus Analytics Integration**.
+Requires HACS 2.0.5 or newer.
+
+The quickest way is the **Open your Home Assistant instance** button in the [README](../../README.md#step-1-install-the-integration). To add the repository by hand:
+
+1. Open **HACS** in Home Assistant.
+2. Open the **⋮** menu in the top right and choose **Custom repositories**.
+3. Enter `https://github.com/zestysoft/sensus_analytics_integration`, set the type to **Integration**, and click **Add**.
+4. Search HACS for **Sensus Analytics Integration** and open it.
+5. Click **Download**.
 6. Restart Home Assistant.
 
 ### Manual Installation
@@ -57,7 +60,11 @@ Use **Configure** on the integration entry to update:
 - Service fee
 - Polling interval
 
-Use **Reconfigure** to update the Sensus Analytics URL, credentials, account number, or meter number.
+Use **Reconfigure** to update the Sensus Analytics URL, credentials, account number, or meter number. Display unit and pricing are changed through **Configure**.
+
+## When Data Shows Up
+
+Sensus Analytics releases each day's readings at about local midnight, so don't expect the sensors to update in real time. See [When Does Data Show Up?](../../README.md#when-does-data-show-up) for details.
 
 ## Troubleshooting
 
@@ -70,4 +77,4 @@ logger:
     custom_components.sensus_analytics: debug
 ```
 
-Diagnostics can be downloaded from the integration device page. Credentials, account number, meter number, address, and meter location are redacted.
+To download diagnostics, go to **Settings** -> **Devices & Services** -> **Sensus Analytics**, open the **⋮** menu on the integration entry, and choose **Download diagnostics**. Credentials, account number, meter number, address, and meter location are redacted.

@@ -8,8 +8,6 @@
 
 A custom Home Assistant integration that monitors water usage from Sensus Analytics.
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/zestysoft/sensus_analytics_integration?quickstart=1)
-
 ## Features
 
 - Daily water usage
@@ -20,7 +18,7 @@ A custom Home Assistant integration that monitors water usage from Sensus Analyt
 - Estimated billing cost and daily usage fee from tiered pricing
 - Last-hour usage, rainfall, temperature, and timestamp from the previous day
 - UI setup, reconfiguration, reauthentication, and options flow
-- Manual `sensus_analytics.reload_data` service
+- Manual `sensus_analytics.reload_data` action
 
 **This integration sets up the following platform.**
 
@@ -76,8 +74,9 @@ The setup flow asks for:
 The billing cost and daily fee sensors are estimates based on the prices you enter.
 
 - **Tier limits and prices use your display unit.** If Unit Type is `CCF`, enter your price per CCF and tier limits in CCF. If it is `gal`, use gallons. Easiest: pick the Unit Type your water bill uses, then copy its numbers as-is.
-- **One flat rate:** enter only Tier 1 Price and leave the tier limits at 0.
-- **Two tiers:** set Tier 1 Limit, Tier 1 Price, and Tier 2 Price. Leave Tier 2 Limit at 0.
+- **Tier limits are optional.** They are blank by default; leave a limit blank (or 0) when you don't need it.
+- **One flat rate:** enter only Tier 1 Price and leave both tier limits blank (or 0).
+- **Two tiers:** set Tier 1 Limit, Tier 1 Price, and Tier 2 Price. Leave Tier 2 Limit blank (or 0).
 - **CF vs. CCF:** Sensus meters usually report in `CF` (cubic feet), shown by the Native Usage Unit sensor. The integration converts that to your display unit. 1 CCF is 100 cubic feet, or about 748 gallons.
 
 ### Step 3: Adjust Options
@@ -94,7 +93,7 @@ Use **Reconfigure** to update the URL, credentials, account number, or meter num
 ## Sensor Entities
 
 - `sensor.sensus_analytics_daily_usage`
-- `sensor.sensus_analytics_usage_unit`
+- `sensor.sensus_analytics_native_usage_unit`
 - `sensor.sensus_analytics_meter_address`
 - `sensor.sensus_analytics_last_read`
 - `sensor.sensus_analytics_meter_longitude`
@@ -109,14 +108,26 @@ Use **Reconfigure** to update the URL, credentials, account number, or meter num
 - `sensor.sensus_analytics_last_hour_temperature`
 - `sensor.sensus_analytics_last_hour_timestamp`
 
-## Services
+## When Does Data Show Up?
+
+Water data from Sensus Analytics is not real time, so it is normal for the sensors to lag behind your actual usage.
+
+- **Data arrives once a day.** Sensus Analytics usually holds the day's readings and releases the whole previous day at about local midnight. Small late corrections can trickle in over the next few hours (updates have been seen between about 1 AM and 8 AM).
+- **Home Assistant records data when it arrives.** Home Assistant can't backdate sensor history, so a day's water appears at the start of the next day. In the Energy dashboard, yesterday's usage lands in today's first hour.
+- **Daily Usage and Last Read describe the previous day.**
+- **The Last Hour sensors show the same clock hour from the previous day.**
+- **Reloading won't make data arrive sooner.** The `sensus_analytics.reload_data` action only fetches what Sensus Analytics has already published.
+
+A future improvement could write hourly usage into Energy statistics at the correct times.
+
+## Actions
 
 ### `sensus_analytics.reload_data`
 
 Manually refresh data for all loaded Sensus Analytics entries.
 
 ```yaml
-service: sensus_analytics.reload_data
+action: sensus_analytics.reload_data
 ```
 
 ## Development

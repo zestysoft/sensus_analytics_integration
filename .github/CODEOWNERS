@@ -5,7 +5,5 @@
 # modifies files they own.
 #
 # See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-#
-# NOTE: This file is updated automatically by initialize.sh when using the blueprint.
 
 * @zestysoft

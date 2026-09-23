@@ -18,16 +18,29 @@ Pull requests are the best way to propose changes to the codebase.
 3. If you've changed something, update the documentation.
 4. Make sure your code passes all checks (using `script/check` for linting and type checking).
 5. Test your contribution.
-6. Issue that pull request!
+6. Issue that pull request, with a [Conventional Commit](https://www.conventionalcommits.org/) title (see below).
 
-## Any contributions you make will be under the MIT Software License
+## Pull request titles and releases
 
-In short, when you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.
+Pull requests are squash-merged, so the PR title becomes the commit message on `main`. [release-please](https://github.com/googleapis/release-please) builds releases and the changelog from those commit messages, so **the PR title must be a Conventional Commit**:
 
-## Report bugs using GitHub's [issues](../../issues)
+| Title prefix                                   | Release               |
+| ---------------------------------------------- | --------------------- |
+| `fix:` (or `perf:`)                            | Patch (1.8.1 → 1.8.2) |
+| `feat:`                                        | Minor (1.8.1 → 1.9.0) |
+| Breaking change (`feat!:`, `fix!:`, ...)       | Major (1.8.1 → 2.0.0) |
+| `chore:`, `ci:`, `docs:`, `test:`, `refactor:` | No release            |
+
+For example: `fix: handle empty hourly usage data` or `feat: add weekly usage sensor`.
+
+## Any contributions you make will be under the Apache 2.0 License
+
+In short, when you submit code changes, your submissions are understood to be under the same [Apache License 2.0](LICENSE) that covers the project. Feel free to contact the maintainers if that's a concern.
+
+## Report bugs using GitHub's [issues](https://github.com/zestysoft/sensus_analytics_integration/issues)
 
 GitHub issues are used to track public bugs.
-Report a bug by [opening a new issue](../../issues/new/choose); it's that easy!
+Report a bug by [opening a new issue](https://github.com/zestysoft/sensus_analytics_integration/issues/new/choose); it's that easy!
 
 ## Write bug reports with detail, background, and sample code
 
@@ -58,12 +71,15 @@ Run `script/check` to lint and type-check your code before submitting, or `scrip
 
 This project includes [prompt files](./.github/prompts/) to help you work more efficiently with GitHub Copilot. These reusable templates provide context and requirements for common tasks:
 
-- **Add New Sensor** - Create sensors with proper structure
-- **Add New Service** - Implement services with validation
+- **Add Action** - Add a service action with validation
 - **Add Config Option** - Add configuration options to flows
+- **Add Entity Platform** - Add a new entity platform
 - **Add Entity to Device** - Expand device capabilities
+- **Add New Sensor** - Create sensors with proper structure
+- **Create Implementation Plan** - Plan a larger change before coding
 - **Debug Coordinator Issue** - Diagnose data update problems
-- **Update Translations** - Manage multilingual strings
+- **Review Integration** - Review the integration against Home Assistant standards
+- **Update Translations** - Manage translation strings
 
 **Example usage in Copilot Chat:**
 
@@ -75,15 +91,13 @@ See the prompt files in `.github/prompts/` for details on using these templates.
 
 ## Code Quality
 
-This blueprint follows Home Assistant's [integration quality standards](https://developers.home-assistant.io/docs/core/integration-quality-scale/) as best practices. The code includes:
+This integration follows Home Assistant's [integration quality standards](https://developers.home-assistant.io/docs/core/integration-quality-scale/) as best practices. The code includes:
 
 - ✅ Comprehensive docstrings with links to official documentation
 - ✅ Full type hints for better IDE support
 - ✅ Config flow with reauthentication support
 - ✅ Proper error handling and entity unavailability
 - ✅ Coordinator pattern for efficient data fetching
-
-**Don't worry!** You don't need to maintain all of this. The blueprint gives you a solid, well-documented starting point. Feel free to simplify or adapt anything to your needs - the goal is to help you get started quickly with good patterns, not to overwhelm you with requirements.
 
 ## Test your code modification
 
@@ -96,4 +110,4 @@ You can also run tests using `script/test` to ensure your changes don't break ex
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under its MIT License.
+By contributing, you agree that your contributions will be licensed under its [Apache License 2.0](LICENSE).

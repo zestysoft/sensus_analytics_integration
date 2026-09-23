@@ -1,14 +1,14 @@
 # Customization & Extensibility
 
-This document explains how to customize and extend the blueprint without modifying files that are managed by the upstream template.
+This repository adopted the development tooling from the [`jpawlowski/hacs.integration_blueprint`](https://github.com/jpawlowski/hacs.integration_blueprint) template. This document explains how to customize and extend that tooling without modifying files that are managed by the upstream template.
 
 ## Template Sync
 
-Repositories created from this blueprint can receive upstream improvements automatically via a weekly pull request created by the [template sync workflow](../../.github/workflows/template-sync.yml).
+This repository can receive upstream blueprint improvements automatically via a weekly pull request created by the [template sync workflow](../../.github/workflows/template-sync.yml).
 
 ### How it works
 
-Every Monday at 07:00 UTC, the workflow checks whether the upstream blueprint (`zestysoft/sensus_analytics_integration`) has new commits. If it does, it opens a pull request with the diff against your repository.
+Every Monday at 07:00 UTC, the workflow checks whether the upstream blueprint (`jpawlowski/hacs.integration_blueprint`) has new commits. If it does, it opens a pull request with the diff against your repository.
 
 You review the PR and merge anything you want to adopt. Changes you don't want can simply be dismissed or partially merged.
 
@@ -101,13 +101,13 @@ Files already excluded by default:
 | Path                                                                           | Reason                                                                   |
 | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
 | `custom_components/`                                                           | Your integration code                                                    |
-| `tests/`                                                                       | Test files reference your domain (set by `initialize.sh`)                |
+| `tests/`                                                                       | Test files reference your integration domain                             |
 | `pyproject.toml`                                                               | Contains your domain in package metadata                                 |
 | `.yamllint.yml`                                                                | Contains your domain in configuration comment                            |
 | `.pre-commit-config.yaml`                                                      | Contains your domain in file-match patterns                              |
 | `requirements.txt`                                                             | Your integration's PyPI dependencies (managed alongside `manifest.json`) |
 | `.vscode/launch.json`, `.vscode/tasks.json`                                    | Contain your domain in debugger/task arguments                           |
-| `README.md`, `LICENSE`, etc.                                                   | Replaced by `initialize.sh`                                              |
+| `README.md`, `LICENSE`, etc.                                                   | Project-specific content                                                 |
 | `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`       | Contain domain-specific references                                       |
 | `.github/CODEOWNERS`, `.github/FUNDING.yml`, `.github/COPILOT_CODING_AGENT.md` | Per-project GitHub settings                                              |
 | `config/`                                                                      | Local HA instance (credentials, test data)                               |
@@ -130,7 +130,7 @@ rm .github/workflows/template-sync.yml
 rm .templatesyncignore
 ```
 
-That's it. No workflow runs, no PRs, no noise. You can still pull upstream changes manually at any time by comparing your repository against `zestysoft/sensus_analytics_integration`.
+That's it. No workflow runs, no PRs, no noise. You can still pull upstream changes manually at any time by comparing your repository against `jpawlowski/hacs.integration_blueprint`.
 
 ---
 
@@ -156,8 +156,7 @@ script/hooks/          # Hooks for scripts in script/
 ├── setup-shell.pre.sh
 ├── setup-shell.post.sh
 ├── setup-git.pre.sh
-├── setup-git.post.sh
-└── post-attach.post.sh
+└── setup-git.post.sh
 ```
 
 Both directories are listed in `.templatesyncignore` and are never touched by template sync.
@@ -207,7 +206,6 @@ For `.devcontainer/` scripts the same pattern applies under `.devcontainer/hooks
 | `.devcontainer/post-start.sh`     | `.devcontainer/hooks/post-start.pre.sh`     | `.devcontainer/hooks/post-start.post.sh`     |
 | `.devcontainer/setup-shell.sh`    | `.devcontainer/hooks/setup-shell.pre.sh`    | `.devcontainer/hooks/setup-shell.post.sh`    |
 | `.devcontainer/setup-git.sh`      | `.devcontainer/hooks/setup-git.pre.sh`      | `.devcontainer/hooks/setup-git.post.sh`      |
-| `.devcontainer/post-attach.sh`    | `.devcontainer/hooks/post-attach.pre.sh`    | `.devcontainer/hooks/post-attach.post.sh`    |
 
 ### Example: install extra tools after bootstrap
 
@@ -291,7 +289,7 @@ Copy the example file and uncomment what you need:
 cp .devcontainer/.env.local.example .devcontainer/.env.local
 ```
 
-`.env.local` is gitignored and listed in `.templatesyncignore` — it is never committed and never touched by template sync.
+`.env.local` is gitignored — it is never committed, and because it is untracked, template sync never touches it.
 
 ---
 

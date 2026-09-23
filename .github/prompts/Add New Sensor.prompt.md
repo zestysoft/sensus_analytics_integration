@@ -154,6 +154,5 @@ async def async_setup_entry(
 - Entity: `custom_components/sensus_analytics/sensor/[sensor_name].py`
 - Platform: `custom_components/sensus_analytics/sensor/__init__.py`
 - Translations: `custom_components/sensus_analytics/translations/*.json`
-- Documentation: Reference [#file:docs/development/ARCHITECTURE.md]
 
 **DO NOT create tests unless explicitly requested.**

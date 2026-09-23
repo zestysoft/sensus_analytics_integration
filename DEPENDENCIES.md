@@ -21,16 +21,18 @@ async-timeout>=4.0.0
 
 ### `package.json` - Node.js Development Tools
 
-**Purpose:** JavaScript/Node.js tools used for Markdown formatting and linting
-**Installed by:** `script/setup/bootstrap` via `npm install`
+**Purpose:** JavaScript/Node.js development tools (Markdown formatting and linting, type checking, release notes)
+**Installed by:** `script/setup/bootstrap` via `npm ci`
 **Used by:** Developers, IDEs, pre-commit hooks
 
 **Includes:**
 
 - `prettier` - Markdown formatter (also used by `esbenp.prettier-vscode` VS Code extension)
 - `markdownlint-cli2` - Markdown linter (also used by `davidanson.vscode-markdownlint` VS Code extension)
+- `pyright` - Type checker used by `script/type-check` (we prefer pyright over HA's mypy for better IDE integration)
+- `@github/copilot` - GitHub Copilot CLI, used by `script/release-notes`
 
-**Note:** These tools are the CLI counterparts of the VS Code extensions already installed in the devcontainer. Having both ensures IDE and CI/pre-commit behaviour is identical.
+**Note:** `prettier` and `markdownlint-cli2` are the CLI counterparts of the VS Code extensions already installed in the devcontainer. Having both ensures IDE and CI/pre-commit behaviour is identical.
 
 ### `requirements_dev.txt` - Development Tools
 
@@ -40,11 +42,11 @@ async-timeout>=4.0.0
 
 **Includes:**
 
-- `pyright` - Type checker (we prefer pyright over HA's mypy for better IDE integration)
 - `colorlog` - Colored logging for development scripts
+- `pre-commit` - Hook framework (pinned here; `script/setup/bootstrap` installs the hooks)
 - Performance tools (`zlib_ng`, `isal`) - Optional optimization packages
 
-**Note:** Most development tools (ruff, pre-commit, codespell, pylint) are already provided by Home Assistant core's `requirements_test.txt` and `requirements_test_pre_commit.txt`, which are installed automatically via `script/setup/bootstrap`.
+**Note:** Other development tools (ruff, codespell, pylint) are already provided by Home Assistant core's `requirements_test.txt` and `requirements_test_pre_commit.txt`, which are installed automatically via `script/setup/bootstrap`. `pyright` comes from `package.json`, not this file.
 
 ### `requirements_test.txt` - Testing Framework
 
@@ -80,7 +82,7 @@ async-timeout>=4.0.0
 | `manifest.json` + `requirements.txt` | Runtime dependency (end users need it)                       |
 | `requirements_dev.txt`               | Python development tool (linting, formatting, type checking) |
 | `requirements_test.txt`              | Testing tool (pytest plugins, test utilities)                |
-| `package.json`                       | Node.js development tool (Markdown formatting/linting)       |
+| `package.json`                       | Node.js development tool (Markdown tooling, pyright)         |
 
 ## 📝 Maintenance
 
@@ -110,7 +112,7 @@ The `script/setup/bootstrap` automatically installs dependencies from multiple s
 
 ### From Home Assistant Core
 
-**Version:** Configured via `HA_VERSION` in `.devcontainer/devcontainer.json` (currently `2025.12.3`)
+**Version:** Read from the `homeassistant` minimum in `hacs.json` (currently `2026.4.0`, resolved to the latest `2026.4.x` patch). Set `HA_VERSION` in `.devcontainer/.env` or `.devcontainer/.env.local` to override it.
 
 1. **Runtime dependencies** (`requirements_all.txt`)
    - All packages that Home Assistant integrations might need
@@ -124,7 +126,6 @@ The `script/setup/bootstrap` automatically installs dependencies from multiple s
 3. **Pre-commit dependencies** (`requirements_test_pre_commit.txt`)
    - ruff (linting and formatting)
    - codespell (spell checking)
-   - pre-commit (hook framework)
    - pylint (linting)
 
 4. **Home Assistant core** (`homeassistant==$HA_VERSION`)
@@ -132,10 +133,10 @@ The `script/setup/bootstrap` automatically installs dependencies from multiple s
 
 ### From This Project
 
-- `requirements_dev.txt` - Additional development tools this project uses (pyright, colorlog, performance packages)
+- `requirements_dev.txt` - Additional development tools this project uses (colorlog, pre-commit, performance packages)
 - `requirements_test.txt` - Custom component testing utilities
 - `requirements.txt` - This integration's runtime dependencies (if any)
-- `package.json` - Node.js tools for Markdown linting/formatting (prettier, markdownlint-cli2)
+- `package.json` - Node.js tools (prettier, markdownlint-cli2, pyright, @github/copilot)
 
 This approach means this project only needs to maintain a minimal set of dependencies that are specific to this integration, while leveraging the comprehensive dependency management from Home Assistant core.
 
@@ -145,8 +146,8 @@ This approach means this project only needs to maintain a minimal set of depende
 
 ```json
 {
-  "name": "Integration Name",
-  "homeassistant": "2025.11.0",
+  "name": "Sensus Analytics Integration",
+  "homeassistant": "2026.4.0",
   "hacs": "2.0.5"
 }
 ```
