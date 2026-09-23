@@ -111,7 +111,7 @@ Use **Reconfigure** to update the URL, credentials, account number, or meter num
 
 ## Energy Dashboard
 
-The integration imports Sensus hourly usage into Home Assistant's long-term statistics as **Sensus Analytics water usage**. Each hour's water is recorded on the **same day and at the same hour it was actually used**, not when Home Assistant received it. For example, water used at 7 AM on Monday shows up in the Energy dashboard at 7 AM on Monday, even though Sensus only publishes it after midnight. The Energy dashboard's daily and hourly charts match the Sensus portal.
+The integration imports Sensus hourly usage into Home Assistant's long-term statistics as **Sensus Analytics water usage**. Each hour's water is recorded on the **same day and at the same hour it was actually used**, not when Home Assistant received it. For example, water used at 7 AM on Monday shows up in the Energy dashboard **at 7 AM on Monday**, not on Tuesday. It just doesn't show up right away: Sensus only publishes a day's data after that day ends (around midnight), so it can take up to about 24 hours before Monday's hours appear. Once they do, the daily and hourly charts match the Sensus portal.
 
 To use it (or to switch over after updating from an older version):
 
@@ -133,7 +133,7 @@ Water data from Sensus Analytics is not real time, so it is normal for the senso
 
 - **Data arrives once a day.** Sensus Analytics usually holds the day's readings and releases the whole previous day at about local midnight. Small late corrections can trickle in over the next few hours (updates have been seen between about 1 AM and 8 AM).
 - **Sensors record data when it arrives.** Home Assistant can't backdate sensor history, so a day's water appears in the sensors at the start of the next day.
-- **The Energy dashboard shows water on the correct day and hour.** The [Sensus Analytics water usage](#energy-dashboard) statistic is backdated to when the water was used: Monday's 7 AM shower shows up at 7 AM on Monday, not on Tuesday. It appears once Sensus publishes the day, around midnight.
+- **The Energy dashboard shows water on the correct day and hour, once it arrives.** The [Sensus Analytics water usage](#energy-dashboard) statistic is backdated to when the water was used. Monday's 7 AM shower appears at 7 AM on Monday, not on Tuesday, but only after Sensus publishes Monday's data around midnight. Until then, Monday's hours stay empty, so expect a delay of up to about 24 hours.
 - **Daily Usage and Last Read describe the previous day.**
 - **The Last Hour sensors show the same clock hour from the previous day.**
 - **Reloading won't make data arrive sooner.** The `sensus_analytics.reload_data` action only fetches what Sensus Analytics has already published.
