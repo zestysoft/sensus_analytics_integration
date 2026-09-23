@@ -1,4 +1,4 @@
-"""Tests for importing Sensus hourly usage into long-term statistics."""
+"""Tests for importing Sensus hourly usage into long-term statistics, including the import_history action."""
 
 from __future__ import annotations
 
@@ -21,23 +21,28 @@ from custom_components.sensus_analytics.const import (
     CONF_METER_NUMBER,
     CONF_UNIT_TYPE,
     DOMAIN,
+    SERVICE_IMPORT_HISTORY,
     UNIT_CCF,
     UNIT_GALLONS,
 )
 from custom_components.sensus_analytics.diagnostics import async_get_config_entry_diagnostics
 from custom_components.sensus_analytics.statistics import (
     BACKFILL_DAYS,
+    HISTORY_RETRIES,
+    IMPORT_CHUNK_SIZE,
     STATISTIC_NAME,
     build_metadata,
     build_statistic_id,
     hourly_usage,
 )
+from homeassistant.components import persistent_notification
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import statistics_during_period, valid_statistic_id
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.recorder import get_instance
 from homeassistant.util import dt as dt_util
 
@@ -499,3 +504,379 @@ async def test_diagnostics_report_last_hour_without_statistic_id(
         "last_imported_hour": datetime(2026, 9, 22, 6, tzinfo=UTC).isoformat(),
     }
     assert "123_456" not in str(diagnostics)
+
+
+# The import_history action
+
+YESTERDAY = date(2026, 9, 21)
+# The regular import's first run covers these days
+BACKFILL_START = YESTERDAY - timedelta(days=BACKFILL_DAYS)
+
+
+@pytest.fixture(autouse=True)
+def no_delays() -> Generator[None]:
+    """Don't wait between requests or before retries."""
+    with (
+        patch.object(sensus_statistics, "HISTORY_REQUEST_DELAY", 0),
+        patch.object(sensus_statistics, "HISTORY_RETRY_DELAY", 0),
+    ):
+        yield
+
+
+class FakeSensusHistory(FakeSensus):
+    """FakeSensus that can have no data before a day and fail a day a few times."""
+
+    def __init__(self, yesterday: date) -> None:
+        """Start with data for every day and no failures."""
+        super().__init__(yesterday)
+        self.data_since: date | None = None
+        self.fail_times: dict[date, int] = {}
+
+    async def get_hourly_data(self, *, target_date: datetime, authenticate: bool = True, **kwargs: Any) -> list[dict]:
+        """Return one past day's entries, empty before data_since."""
+        day = target_date.date()
+        if self.fail_times.get(day):
+            self.fetched.append(day)
+            self.authenticated.append(authenticate)
+            self.fail_times[day] -= 1
+            raise SensusAnalyticsApiClientCommunicationError("temporary")
+        entries = await super().get_hourly_data(target_date=target_date, authenticate=authenticate, **kwargs)
+        if self.data_since is not None and day < self.data_since:
+            return []
+        return entries
+
+
+@pytest.fixture
+async def sensus(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Generator[FakeSensusHistory]:
+    """Patch the Sensus client with deterministic data for 2026-09-21 as "yesterday"."""
+    await hass.config.async_set_time_zone(TIME_ZONE)
+    freezer.move_to(datetime(2026, 9, 22, 10, 30, tzinfo=_local_tz()))
+    fake = FakeSensusHistory(YESTERDAY)
+    with (
+        patch.object(SensusAnalyticsApiClient, "async_get_data", AsyncMock(side_effect=fake.get_data)),
+        patch.object(SensusAnalyticsApiClient, "async_get_hourly_data", AsyncMock(side_effect=fake.get_hourly_data)),
+    ):
+        yield fake
+
+
+def _days(first: date, last: date) -> list[date]:
+    """Return every day from first through last."""
+    return [first + timedelta(days=offset) for offset in range((last - first).days + 1)]
+
+
+async def _import_history(hass: HomeAssistant, start_date: str, **data: Any) -> None:
+    """Call the action and wait for the background import."""
+    await hass.services.async_call(DOMAIN, SERVICE_IMPORT_HISTORY, {"start_date": start_date, **data}, blocking=True)
+    await _wait(hass)
+
+
+@pytest.fixture
+def notifications(hass: HomeAssistant) -> dict[str, dict[str, Any]]:
+    """Collect the persistent notifications created during a test, by notification id."""
+    created: dict[str, dict[str, Any]] = {}
+
+    @callback
+    def _updated(update_type: persistent_notification.UpdateType, updated: dict[str, Any]) -> None:
+        if update_type in (persistent_notification.UpdateType.ADDED, persistent_notification.UpdateType.UPDATED):
+            created.update(updated)
+
+    persistent_notification.async_register_callback(hass, _updated)
+    return created
+
+
+async def test_older_history_rebuilds_sums_without_a_jump(
+    hass: HomeAssistant,
+    sensus: FakeSensusHistory,
+    notifications: dict[str, dict[str, Any]],
+) -> None:
+    """History before the 30-day backfill is imported and every later sum is rebuilt on top of it."""
+    entry = await _setup(hass)
+    before = await _rows(hass)
+    sensus.fetched.clear()
+    sensus.authenticated.clear()
+
+    with patch.object(
+        sensus_statistics,
+        "async_add_external_statistics",
+        wraps=sensus_statistics.async_add_external_statistics,
+    ) as add_statistics:
+        await _import_history(hass, "2026-06-01")
+
+    # Every day up to the one before yesterday is fetched, one login for the whole run
+    assert sensus.fetched == _days(date(2026, 6, 1), YESTERDAY - timedelta(days=1))
+    assert sensus.authenticated == [True] + [False] * (len(sensus.fetched) - 1)
+    rows = await _rows(hass)
+    days = _days(date(2026, 6, 1), YESTERDAY)
+    assert [row["state"] for row in rows] == pytest.approx([value for day in days for value in _expected_ccf(day)])
+    assert rows[0]["start"] == _day_start(date(2026, 6, 1)).timestamp()
+    # No jump where the old backfill started: sums chain from the first row to the last
+    _assert_chained(rows)
+    assert [row["state"] for row in rows[-len(before) :]] == [row["state"] for row in before]
+    # Large imports are split into several recorder jobs
+    assert add_statistics.call_count == -(-len(rows) // IMPORT_CHUNK_SIZE) > 1
+
+    assert list(notifications) == [f"{DOMAIN}_import_history_{entry.entry_id}"]
+    notification = notifications[f"{DOMAIN}_import_history_{entry.entry_id}"]
+    assert notification["title"] == "Sensus Analytics history import"
+    assert "Imported 113 days" in notification["message"]
+    assert "starting June 1, 2026" in notification["message"]
+    assert "Sensus Analytics water usage" in notification["message"]
+    assert "no hourly data before" not in notification["message"]
+
+    # Rerunning over part of the range keeps earlier hours and continues their sum
+    first_rows = rows
+    sensus.usage_fn = lambda day, hour: day.day + hour / 10 + 1
+    await _import_history(hass, "2026-09-10")
+    rows = await _rows(hass)
+    split = next(index for index, row in enumerate(rows) if row["start"] >= _day_start(date(2026, 9, 10)).timestamp())
+    assert rows[:split] == first_rows[:split]
+    assert [row["state"] for row in rows[split:-24]] == pytest.approx(
+        [value for day in _days(date(2026, 9, 10), date(2026, 9, 20)) for value in _expected_ccf(day, sensus.usage_fn)],
+    )
+    _assert_chained(rows)
+    # The rerun replaces the notification
+    assert list(notifications) == [f"{DOMAIN}_import_history_{entry.entry_id}"]
+    assert "Imported 12 days" in notifications[f"{DOMAIN}_import_history_{entry.entry_id}"]["message"]
+
+
+async def test_leading_days_without_data_are_skipped(
+    hass: HomeAssistant,
+    sensus: FakeSensusHistory,
+    notifications: dict[str, dict[str, Any]],
+) -> None:
+    """Nothing is written before the first day Sensus has data for, and that day is reported."""
+    await _setup(hass)
+    sensus.data_since = date(2026, 7, 15)
+
+    await _import_history(hass, "2026-06-01")
+
+    rows = await _rows(hass)
+    assert rows[0]["start"] == _day_start(date(2026, 7, 15)).timestamp()
+    assert len(rows) == len(_days(date(2026, 7, 15), YESTERDAY)) * 24
+    _assert_chained(rows)
+    message = next(iter(notifications.values()))["message"]
+    assert "Imported 69 days" in message
+    assert "starting July 15, 2026" in message
+    assert "no hourly data before that day" in message
+
+
+async def test_no_data_at_all_is_reported(
+    hass: HomeAssistant,
+    sensus: FakeSensusHistory,
+    notifications: dict[str, dict[str, Any]],
+) -> None:
+    """Without coordinator hourly data the import stops the day before yesterday and says it found nothing."""
+    sensus.hourly = None
+    await _setup(hass)
+    sensus.data_since = YESTERDAY
+
+    await _import_history(hass, "2026-09-01")
+
+    # Yesterday may not be published yet, so it is left to the regular import
+    assert sensus.fetched == _days(date(2026, 9, 1), YESTERDAY - timedelta(days=1))
+    assert await _rows(hass) == []
+    message = next(iter(notifications.values()))["message"]
+    assert "no hourly water usage from September 1, 2026 onwards" in message
+
+
+async def test_failed_day_writes_nothing(
+    hass: HomeAssistant,
+    sensus: FakeSensusHistory,
+    notifications: dict[str, dict[str, Any]],
+) -> None:
+    """A day that still fails after every retry leaves the statistic untouched."""
+    await _setup(hass)
+    before = await _rows(hass)
+    failing_day = date(2026, 7, 20)
+    sensus.fail_on = {failing_day}
+    sensus.fetched.clear()
+
+    with patch.object(sensus_statistics, "async_add_external_statistics") as add_statistics:
+        await _import_history(hass, "2026-06-01")
+        assert add_statistics.call_count == 0
+
+    assert sensus.fetched.count(failing_day) == HISTORY_RETRIES + 1
+    # The run stops at the failing day
+    assert sensus.fetched[-1] == failing_day
+    assert await _rows(hass) == before
+    message = next(iter(notifications.values()))["message"]
+    assert "nothing was changed" in message
+    assert "try again later" in message
+
+
+async def test_transient_failure_is_retried_with_a_new_login(hass: HomeAssistant, sensus: FakeSensusHistory) -> None:
+    """A day that fails twice succeeds on a retry, logging in again first."""
+    await _setup(hass)
+    flaky_day = date(2026, 8, 10)
+    sensus.fail_times = {flaky_day: 2}
+    sensus.fetched.clear()
+    sensus.authenticated.clear()
+
+    await _import_history(hass, "2026-08-08")
+
+    assert sensus.fetched[:5] == [date(2026, 8, 8), date(2026, 8, 9), flaky_day, flaky_day, flaky_day]
+    assert sensus.authenticated[:6] == [True, False, False, True, True, False]
+    rows = await _rows(hass)
+    assert rows[0]["start"] == _day_start(date(2026, 8, 8)).timestamp()
+    assert len(rows) == len(_days(date(2026, 8, 8), YESTERDAY)) * 24
+    _assert_chained(rows)
+
+
+@pytest.mark.parametrize(
+    ("hours", "day"),
+    [
+        # Clocks fall back on 2025-11-02 (25 hours) and spring forward on 2026-03-08 (23 hours)
+        (25, date(2025, 11, 2)),
+        (23, date(2026, 3, 8)),
+    ],
+)
+async def test_dst_days_in_range_import_every_hour(
+    hass: HomeAssistant,
+    sensus: FakeSensusHistory,
+    hours: int,
+    day: date,
+) -> None:
+    """Days with a DST change inside the range import all of their 23 or 25 hours."""
+    await _setup(hass)
+
+    await _import_history(hass, (day - timedelta(days=1)).isoformat())
+
+    rows = await _rows(hass)
+    day_rows = [
+        row for row in rows if _day_start(day).timestamp() <= row["start"] < _day_start(day + timedelta(1)).timestamp()
+    ]
+    assert len(day_rows) == hours
+    assert [row["state"] for row in day_rows] == pytest.approx(_expected_ccf(day))
+    _assert_chained(rows)
+
+
+@pytest.mark.parametrize(
+    ("start_date", "translation_key"),
+    [
+        ("2026-09-22", "start_date_too_recent"),
+        ("2026-10-01", "start_date_too_recent"),
+        ("2023-09-21", "start_date_too_old"),
+    ],
+)
+async def test_invalid_start_date(
+    hass: HomeAssistant,
+    sensus: FakeSensusHistory,
+    start_date: str,
+    translation_key: str,
+) -> None:
+    """Today, future dates, and dates more than 3 years ago are rejected."""
+    await _setup(hass)
+    sensus.fetched.clear()
+
+    with pytest.raises(ServiceValidationError) as error:
+        await hass.services.async_call(DOMAIN, SERVICE_IMPORT_HISTORY, {"start_date": start_date}, blocking=True)
+
+    assert error.value.translation_key == translation_key
+    await _wait(hass)
+    assert sensus.fetched == []
+
+
+async def test_unknown_or_unloaded_entry(hass: HomeAssistant, sensus: FakeSensusHistory) -> None:
+    """An unknown entry id, or no loaded entry at all, is rejected."""
+    entry = await _setup(hass)
+
+    with pytest.raises(ServiceValidationError) as error:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_IMPORT_HISTORY,
+            {"start_date": "2026-09-01", "config_entry_id": "unknown"},
+            blocking=True,
+        )
+    assert error.value.translation_key == "no_loaded_entry"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    with pytest.raises(ServiceValidationError) as error:
+        await hass.services.async_call(DOMAIN, SERVICE_IMPORT_HISTORY, {"start_date": "2026-09-01"}, blocking=True)
+    assert error.value.translation_key == "no_loaded_entry"
+
+
+async def test_history_import_blocks_regular_imports_and_reruns(
+    hass: HomeAssistant,
+    sensus: FakeSensusHistory,
+) -> None:
+    """While a history import runs, a second one is rejected and regular imports wait without piling up."""
+    entry = await _setup(hass)
+    importer = entry.runtime_data.statistics
+    started = asyncio.Event()
+    release = asyncio.Event()
+    original = sensus.get_hourly_data
+
+    async def slow_get_hourly_data(**kwargs: Any) -> list[dict]:
+        started.set()
+        await release.wait()
+        return await original(**kwargs)
+
+    with (
+        patch.object(SensusAnalyticsApiClient, "async_get_hourly_data", AsyncMock(side_effect=slow_get_hourly_data)),
+        patch.object(
+            sensus_statistics,
+            "async_add_external_statistics",
+            wraps=sensus_statistics.async_add_external_statistics,
+        ) as add_statistics,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_IMPORT_HISTORY,
+            {"start_date": "2026-09-01", "config_entry_id": entry.entry_id},
+            blocking=True,
+        )
+        await started.wait()
+        assert importer.history_import_running
+
+        with pytest.raises(ServiceValidationError) as error:
+            await hass.services.async_call(DOMAIN, SERVICE_IMPORT_HISTORY, {"start_date": "2026-09-01"}, blocking=True)
+        assert error.value.translation_key == "history_import_running"
+
+        # A correction arrives while the history import runs: one regular run is queued, not one per poll
+        sensus.hourly = [{**item, "usage": item["usage"] + 1} for item in _day_entries(YESTERDAY)]
+        with patch.object(importer, "async_import", wraps=importer.async_import) as async_import:
+            for _ in range(3):
+                await entry.runtime_data.coordinator.async_refresh()
+            await asyncio.sleep(0)
+            assert async_import.call_count == 1
+            assert add_statistics.call_count == 0
+
+            release.set()
+            await _wait(hass)
+
+        # The history import wrote first, then the waiting regular run imported the correction
+        assert not importer.history_import_running
+        assert add_statistics.call_count == 2
+        history_rows = add_statistics.call_args_list[0].args[2]
+        assert history_rows[0]["start"] == _day_start(date(2026, 9, 1))
+        correction_rows = add_statistics.call_args_list[1].args[2]
+        assert correction_rows[0]["start"] == _day_start(YESTERDAY)
+
+        # Polls with unchanged data don't import again
+        await _refresh(hass, entry)
+        assert add_statistics.call_count == 2
+
+    rows = await _rows(hass)
+    assert rows[-1]["state"] == pytest.approx(_expected_ccf(YESTERDAY)[-1] + 0.01)
+    assert rows[0]["start"] == _day_start(BACKFILL_START).timestamp()
+    _assert_chained(rows)
+
+
+async def test_newer_hours_are_rechained_when_yesterday_is_not_fetched(
+    hass: HomeAssistant,
+    sensus: FakeSensusHistory,
+) -> None:
+    """Hours after the imported range (here yesterday, from the regular import) get rebuilt sums."""
+    entry = await _setup(hass)
+    before = await _rows(hass)
+    # The coordinator's best-effort hourly fetch failed, so yesterday is left out of the history import
+    sensus.hourly = None
+    await _refresh(hass, entry)
+
+    await _import_history(hass, "2026-08-01")
+
+    assert sensus.fetched[-1] == YESTERDAY - timedelta(days=1)
+    rows = await _rows(hass)
+    assert rows[0]["start"] == _day_start(date(2026, 8, 1)).timestamp()
+    assert [row["state"] for row in rows[-24:]] == [row["state"] for row in before[-24:]]
+    _assert_chained(rows)

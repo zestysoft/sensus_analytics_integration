@@ -31,3 +31,8 @@ UNIT_CCF = "CCF"
 UNIT_GALLONS = "gal"
 
 SERVICE_RELOAD_DATA = "reload_data"
+SERVICE_IMPORT_HISTORY = "import_history"
+
+ATTR_START_DATE = "start_date"
+# How far back the import_history action may start
+HISTORY_IMPORT_MAX_YEARS = 3
