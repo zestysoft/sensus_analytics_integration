@@ -104,6 +104,27 @@ class SensusAnalyticsApiClient:
 
         return daily_data
 
+    async def async_get_hourly_data(
+        self,
+        *,
+        account_number: str,
+        meter_number: str,
+        target_date: datetime,
+        authenticate: bool = True,
+    ) -> list[dict[str, Any]]:
+        """Fetch one local day's hourly usage and weather data.
+
+        The login is refreshed first unless the caller has just authenticated (for example
+        when fetching several days in a row).
+        """
+        if authenticate:
+            await self.async_authenticate()
+        return await self._async_get_hourly_data(
+            account_number=account_number,
+            meter_number=meter_number,
+            target_date=target_date,
+        )
+
     async def _async_get_daily_data(
         self,
         account_number: str,

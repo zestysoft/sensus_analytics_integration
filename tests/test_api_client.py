@@ -270,3 +270,23 @@ async def test_async_get_data_handles_null_hourly_data() -> None:
 
     assert data["dailyUsage"] == 10
     assert data.get("hourly_usage_data", []) == []
+
+
+@pytest.mark.parametrize(("authenticate", "logins"), [(True, 1), (False, 0)])
+@pytest.mark.asyncio
+async def test_async_get_hourly_data_fetches_one_day(authenticate: bool, logins: int) -> None:
+    """The public hourly fetch logs in unless told not to and requests the whole local day."""
+    session = FakeSession()
+
+    data = await _client(session).async_get_hourly_data(
+        account_number="123",
+        meter_number="456",
+        target_date=TARGET_DATE,
+        authenticate=authenticate,
+    )
+
+    assert [entry["usage"] for entry in data] == [1.25]
+    assert len(session.posts) == logins
+    assert session.gets[0]["url"] == "https://example.sensus-analytics.com/water/usage/123/456"
+    start = datetime(2024, 5, 1, tzinfo=ZoneInfo("America/Los_Angeles"))
+    assert session.gets[0]["params"]["start"] == int(start.timestamp() * 1000)

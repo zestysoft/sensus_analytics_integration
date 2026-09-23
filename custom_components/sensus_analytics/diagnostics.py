@@ -33,6 +33,8 @@ async def async_get_config_entry_diagnostics(
     entry: SensusAnalyticsConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+    statistics = entry.runtime_data.statistics
+    last_imported_hour = await statistics.async_get_last_imported_hour()
     return {
         "entry": async_redact_data(
             {
@@ -44,4 +46,9 @@ async def async_get_config_entry_diagnostics(
             TO_REDACT,
         ),
         "coordinator_data": async_redact_data(entry.runtime_data.coordinator.data or {}, TO_REDACT),
+        # The statistic id contains the account and meter numbers, so only the unit is reported
+        "statistics": {
+            "unit": statistics.unit,
+            "last_imported_hour": last_imported_hour.isoformat() if last_imported_hour else None,
+        },
     }

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
     from .api import SensusAnalyticsApiClient
     from .coordinator import SensusAnalyticsDataUpdateCoordinator
+    from .statistics import SensusAnalyticsStatisticsImporter
 
 
 type SensusAnalyticsConfigEntry = ConfigEntry[SensusAnalyticsData]
@@ -23,6 +24,7 @@ class SensusAnalyticsData:
     client: SensusAnalyticsApiClient
     coordinator: SensusAnalyticsDataUpdateCoordinator
     integration: Integration
+    statistics: SensusAnalyticsStatisticsImporter
 
 
 def get_config_value(
