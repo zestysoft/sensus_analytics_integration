@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.2](https://github.com/zestysoft/sensus_analytics_integration/compare/v1.8.1...v1.8.2) (2026-09-23)
+
+
+### Bug Fixes
+
+* keep polling through Sensus outages and tidy config entry lifecycle ([#104](https://github.com/zestysoft/sensus_analytics_integration/issues/104)) ([d95a75c](https://github.com/zestysoft/sensus_analytics_integration/commit/d95a75cf3f13b1630792b43b98b90c00a65f6a88))
+
 ## [1.8.1](https://github.com/zestysoft/sensus_analytics_integration/compare/v1.8.0...v1.8.1) (2026-09-23)
 
 
