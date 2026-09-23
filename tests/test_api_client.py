@@ -8,7 +8,11 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from custom_components.sensus_analytics.api import SensusAnalyticsApiClient, SensusAnalyticsApiClientAuthenticationError
+from custom_components.sensus_analytics.api import (
+    SensusAnalyticsApiClient,
+    SensusAnalyticsApiClientAuthenticationError,
+    SensusAnalyticsApiClientCommunicationError,
+)
 
 
 class FakeResponse:
@@ -40,9 +44,10 @@ class FakeResponse:
 class FakeSession:
     """Minimal aiohttp-like session for client tests."""
 
-    def __init__(self, *, login_status: int = 302) -> None:
+    def __init__(self, *, login_status: int = 302, daily_payload: dict | None = None) -> None:
         """Initialize the fake session."""
         self.login_status = login_status
+        self.daily_payload = daily_payload
         self.posts: list[dict] = []
         self.gets: list[dict] = []
 
@@ -51,6 +56,8 @@ class FakeSession:
         self.posts.append({"url": url, **kwargs})
         if url.endswith("j_spring_security_check"):
             return FakeResponse(self.login_status)
+        if self.daily_payload is not None:
+            return FakeResponse(200, self.daily_payload)
         return FakeResponse(
             200,
             {
@@ -133,3 +140,33 @@ async def test_async_authenticate_raises_for_failed_login() -> None:
 
     with pytest.raises(SensusAnalyticsApiClientAuthenticationError):
         await client.async_authenticate()
+
+
+@pytest.mark.asyncio
+async def test_async_get_data_raises_communication_error_for_nodata_response() -> None:
+    """A "nodata" response with no devices is a clean communication error, not an IndexError."""
+    nodata_payload = {
+        "operationSuccess": True,
+        "widgetList": [
+            {
+                "id": "meters",
+                "size": 0,
+                "data": {"devices": [], "nodata": True, "accountNumber": "123", "error": ["error"]},
+                "commodity": "water",
+            },
+        ],
+        "errors": [],
+    }
+    client = SensusAnalyticsApiClient(
+        base_url="https://example.sensus-analytics.com",
+        username="user",
+        password="pass",
+        session=FakeSession(daily_payload=nodata_payload),
+    )
+
+    with pytest.raises(SensusAnalyticsApiClientCommunicationError, match="no meter data"):
+        await client.async_get_data(
+            account_number="123",
+            meter_number="456",
+            target_date=datetime(2024, 5, 1, tzinfo=ZoneInfo("America/Los_Angeles")),
+        )

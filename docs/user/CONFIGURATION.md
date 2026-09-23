@@ -10,27 +10,36 @@
 | Account Number | Yes      | Sensus Analytics account number                                                    |
 | Meter Number   | Yes      | Water meter number                                                                 |
 | Unit Type      | Yes      | Display usage as `CCF` or `gal`                                                    |
-| Tier 1 Gallons | No       | Gallons charged at the tier 1 price before tier 2 starts                           |
-| Tier 1 Price   | Yes      | Tier 1 price per gallon                                                            |
-| Tier 2 Gallons | No       | Gallons charged at the tier 2 price before tier 3 starts                           |
-| Tier 2 Price   | No       | Tier 2 price per gallon                                                            |
-| Tier 3 Price   | No       | Tier 3 price per gallon                                                            |
+| Tier 1 Limit   | No       | Usage billed at the tier 1 price before tier 2 starts, in your display unit        |
+| Tier 1 Price   | Yes      | Tier 1 price per display unit (per CCF or per gallon)                              |
+| Tier 2 Limit   | No       | Usage billed at the tier 2 price before tier 3 starts, in your display unit        |
+| Tier 2 Price   | No       | Tier 2 price per display unit                                                      |
+| Tier 3 Price   | No       | Tier 3 price per display unit                                                      |
 | Service Fee    | Yes      | Fixed service fee included in billing cost                                         |
 
 The base URL is normalized with a trailing slash. If no scheme is provided, `https://` is assumed.
+
+## Pricing
+
+The billing cost and daily fee sensors are estimates based on the prices you enter.
+
+- **Tier limits and prices use your display unit.** If Unit Type is `CCF`, enter your price per CCF and tier limits in CCF. If it is `gal`, use gallons. Easiest: pick the Unit Type your water bill uses, then copy its numbers as-is.
+- **One flat rate:** enter only Tier 1 Price and leave the tier limits at 0.
+- **Two tiers:** set Tier 1 Limit, Tier 1 Price, and Tier 2 Price. Leave Tier 2 Limit at 0.
+- **CF vs. CCF:** Sensus meters usually report in `CF` (cubic feet), shown by the Native Usage Unit sensor. The integration converts that to your display unit. 1 CCF is 100 cubic feet, or about 748 gallons.
 
 ## Options Flow
 
 The options flow controls display and calculation settings:
 
-| Option          | Default     | Description                         |
-| --------------- | ----------- | ----------------------------------- |
-| Unit Type       | `CCF`       | Display usage as CCF or gallons     |
-| Tier 1 Price    | `0.0128`    | Tier 1 price per gallon             |
-| Service Fee     | `15.0`      | Fixed billing service fee           |
-| Update Interval | `5` minutes | Polling interval, 1 to 1440 minutes |
+| Option          | Default     | Description                                           |
+| --------------- | ----------- | ----------------------------------------------------- |
+| Unit Type       | `CCF`       | Display usage as CCF or gallons                       |
+| Tier 1 Price    | Yes         | Tier 1 price per display unit (per CCF or per gallon) |
+| Service Fee     | `15.0`      | Fixed billing service fee                             |
+| Update Interval | `5` minutes | Polling interval, 1 to 1440 minutes                   |
 
-Blank tier gallon or price fields are treated as zero.
+Blank tier limit or price fields are treated as zero.
 
 ## Reconfiguration
 

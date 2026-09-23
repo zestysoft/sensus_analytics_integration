@@ -117,24 +117,6 @@ def _convert_usage(
     return round(usage_float, 2)
 
 
-def _convert_usage_to_gallons(
-    coordinator: SensusAnalyticsDataUpdateCoordinator,
-    usage: Any,
-    source_unit: Any = None,
-) -> float | None:
-    """Convert a Sensus usage value to gallons for price calculations."""
-    usage_float = _as_float(usage)
-    if usage_float is None:
-        return None
-
-    source = _normalized_unit(source_unit) or _api_usage_unit(coordinator)
-    if source == "CF":
-        return usage_float * CF_TO_GALLON
-    if source == UNIT_CCF:
-        return usage_float * GALLONS_PER_CCF
-    return usage_float
-
-
 def _usage_unit(coordinator: SensusAnalyticsDataUpdateCoordinator) -> str:
     """Return the configured usage unit."""
     return _configured_usage_unit(coordinator)
@@ -189,49 +171,51 @@ def _option_float(
 
 def _calculate_tiered_cost(
     coordinator: SensusAnalyticsDataUpdateCoordinator,
-    usage_gallons: float | None,
+    usage: float | None,
     *,
     include_service_fee: bool,
 ) -> float | None:
-    """Calculate water cost from configured tier pricing."""
-    if usage_gallons is None:
+    """Calculate water cost from configured tier pricing.
+
+    Tier sizes and prices are in the configured display unit (gallons or CCF),
+    matching how users read them off their water bill.
+    """
+    if usage is None:
         return None
 
-    tier1_gallons = _option_float(coordinator, CONF_TIER1_GALLONS)
+    tier1_limit = _option_float(coordinator, CONF_TIER1_GALLONS)
     tier1_price = _option_float(coordinator, CONF_TIER1_PRICE, DEFAULT_TIER1_PRICE)
-    tier2_gallons = _option_float(coordinator, CONF_TIER2_GALLONS)
+    tier2_limit = _option_float(coordinator, CONF_TIER2_GALLONS)
     tier2_price = _option_float(coordinator, CONF_TIER2_PRICE)
     tier3_price = _option_float(coordinator, CONF_TIER3_PRICE)
     service_fee = _option_float(coordinator, CONF_SERVICE_FEE, DEFAULT_SERVICE_FEE)
 
     cost = service_fee if include_service_fee else 0
-    if tier1_gallons == 0:
-        cost += usage_gallons * tier1_price
-    elif tier2_gallons == 0:
-        cost += min(usage_gallons, tier1_gallons) * tier1_price
-        if usage_gallons > tier1_gallons:
-            cost += (usage_gallons - tier1_gallons) * tier2_price
+    if tier1_limit == 0:
+        cost += usage * tier1_price
+    elif tier2_limit == 0:
+        cost += min(usage, tier1_limit) * tier1_price
+        if usage > tier1_limit:
+            cost += (usage - tier1_limit) * tier2_price
     else:
-        cost += min(usage_gallons, tier1_gallons) * tier1_price
-        if usage_gallons > tier1_gallons:
-            tier2_usage = min(usage_gallons - tier1_gallons, tier2_gallons)
+        cost += min(usage, tier1_limit) * tier1_price
+        if usage > tier1_limit:
+            tier2_usage = min(usage - tier1_limit, tier2_limit)
             cost += tier2_usage * tier2_price
-        if usage_gallons > tier1_gallons + tier2_gallons:
-            cost += (usage_gallons - tier1_gallons - tier2_gallons) * tier3_price
+        if usage > tier1_limit + tier2_limit:
+            cost += (usage - tier1_limit - tier2_limit) * tier3_price
 
     return round(cost, 2)
 
 
 def _billing_cost(coordinator: SensusAnalyticsDataUpdateCoordinator) -> float | None:
     """Return billing cost."""
-    usage_gallons = _convert_usage_to_gallons(coordinator, _data(coordinator).get("billingUsage"))
-    return _calculate_tiered_cost(coordinator, usage_gallons, include_service_fee=True)
+    return _calculate_tiered_cost(coordinator, _billing_usage(coordinator), include_service_fee=True)
 
 
 def _daily_fee(coordinator: SensusAnalyticsDataUpdateCoordinator) -> float | None:
     """Return daily fee."""
-    usage_gallons = _convert_usage_to_gallons(coordinator, _data(coordinator).get("dailyUsage"))
-    return _calculate_tiered_cost(coordinator, usage_gallons, include_service_fee=False)
+    return _calculate_tiered_cost(coordinator, _daily_usage(coordinator), include_service_fee=False)
 
 
 def _local_tz(coordinator: SensusAnalyticsDataUpdateCoordinator) -> tzinfo:
