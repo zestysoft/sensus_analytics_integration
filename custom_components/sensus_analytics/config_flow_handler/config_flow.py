@@ -98,10 +98,11 @@ class SensusAnalyticsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN)
                 for existing_entry in self._async_current_entries(include_ignore=False):
                     if existing_entry.entry_id != entry.entry_id and existing_entry.unique_id == unique_id:
                         return self.async_abort(reason="already_configured")
+                # Merge so unit and pricing values from the initial setup stay in the entry data
                 return self.async_update_reload_and_abort(
                     entry,
                     unique_id=unique_id,
-                    data=user_input,
+                    data_updates=user_input,
                 )
 
         return self.async_show_form(

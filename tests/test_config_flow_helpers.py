@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from custom_components.sensus_analytics.config_flow_handler.schemas import get_options_schema
+from custom_components.sensus_analytics.config_flow_handler.schemas import get_options_schema, get_reconfigure_schema
 from custom_components.sensus_analytics.config_flow_handler.validators import sanitize_config_input
 from custom_components.sensus_analytics.const import (
     CONF_ACCOUNT_NUMBER,
     CONF_BASE_URL,
     CONF_METER_NUMBER,
+    CONF_UNIT_TYPE,
     CONF_UPDATE_INTERVAL_MINUTES,
 )
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 
 def test_sanitize_config_input_normalizes_url_and_identifiers() -> None:
@@ -41,3 +43,16 @@ def test_options_schema_accepts_update_interval() -> None:
     )
 
     assert data[CONF_UPDATE_INTERVAL_MINUTES] == 15
+
+
+def test_reconfigure_schema_only_covers_connection_settings() -> None:
+    """Reconfigure leaves display unit and pricing to the options flow."""
+    schema = get_reconfigure_schema({CONF_BASE_URL: "https://city.sensus-analytics.com/", CONF_UNIT_TYPE: "gal"})
+
+    assert {str(key) for key in schema.schema} == {
+        CONF_BASE_URL,
+        CONF_USERNAME,
+        CONF_PASSWORD,
+        CONF_ACCOUNT_NUMBER,
+        CONF_METER_NUMBER,
+    }

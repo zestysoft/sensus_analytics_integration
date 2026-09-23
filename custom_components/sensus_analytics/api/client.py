@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, time
 import socket
 from typing import Any, NoReturn
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 import aiohttp
 
@@ -48,7 +48,7 @@ class SensusAnalyticsApiClient:
         self._session = session
 
     async def async_authenticate(self) -> None:
-        """Authenticate the shared client session against Sensus Analytics."""
+        """Authenticate the client session against Sensus Analytics."""
         try:
             async with self._session.post(
                 self._url("j_spring_security_check"),
@@ -59,16 +59,25 @@ class SensusAnalyticsApiClient:
                 allow_redirects=False,
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as response:
-                if response.status != 302:
-                    _raise_authentication_error(
-                        f"Authentication failed with status {response.status}",
-                    )
-        except SensusAnalyticsApiClientAuthenticationError:
-            raise
+                status = response.status
+                location = response.headers.get("Location", "")
         except (TimeoutError, aiohttp.ClientError, socket.gaierror) as exception:
             raise SensusAnalyticsApiClientCommunicationError(
                 f"Authentication request failed: {exception}",
             ) from exception
+
+        # Spring Security redirects on success and either redirects back to the login page with an
+        # "error" query parameter or re-renders the login form (200) when the credentials are rejected
+        if status == 302:
+            if "error" in urlsplit(location).query.lower():
+                _raise_authentication_error("Sensus Analytics rejected the username or password")
+            return
+        if status in (200, 401):
+            _raise_authentication_error(f"Authentication failed with status {status}")
+        # Anything else (5xx, 429, a 403 from a firewall, ...) is a service problem, not a credential problem
+        raise SensusAnalyticsApiClientCommunicationError(
+            f"Authentication request returned unexpected status {status}",
+        )
 
     async def async_get_data(
         self,
@@ -87,7 +96,8 @@ class SensusAnalyticsApiClient:
                 meter_number=meter_number,
                 target_date=target_date,
             )
-        except SensusAnalyticsApiClientCommunicationError as exception:
+        except SensusAnalyticsApiClientError as exception:
+            # Hourly data only feeds the "last hour" sensors, so never let it fail the whole update
             LOGGER.warning("Failed to fetch Sensus hourly data: %s", exception)
         else:
             daily_data["hourly_usage_data"] = hourly_data
@@ -110,17 +120,16 @@ class SensusAnalyticsApiClient:
                 },
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as response:
-                if response.status in (401, 403):
-                    _raise_authentication_error(
-                        f"Daily data request failed with status {response.status}",
-                    )
                 response.raise_for_status()
                 payload = await response.json(content_type=None)
-        except SensusAnalyticsApiClientAuthenticationError:
-            raise
         except (TimeoutError, aiohttp.ClientError, socket.gaierror) as exception:
             raise SensusAnalyticsApiClientCommunicationError(
                 f"Daily data request failed: {exception}",
+            ) from exception
+        except ValueError as exception:
+            # An HTML maintenance or login page instead of JSON
+            raise SensusAnalyticsApiClientCommunicationError(
+                "Daily data response was not valid JSON",
             ) from exception
 
         try:
@@ -159,17 +168,15 @@ class SensusAnalyticsApiClient:
                 },
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as response:
-                if response.status in (401, 403):
-                    _raise_authentication_error(
-                        f"Hourly data request failed with status {response.status}",
-                    )
                 response.raise_for_status()
                 payload = await response.json(content_type=None)
-        except SensusAnalyticsApiClientAuthenticationError:
-            raise
         except (TimeoutError, aiohttp.ClientError, socket.gaierror) as exception:
             raise SensusAnalyticsApiClientCommunicationError(
                 f"Hourly data request failed: {exception}",
+            ) from exception
+        except ValueError as exception:
+            raise SensusAnalyticsApiClientCommunicationError(
+                "Hourly data response was not valid JSON",
             ) from exception
 
         return self._parse_hourly_data(payload)
@@ -189,9 +196,12 @@ class SensusAnalyticsApiClient:
                 f"Hourly data response reported errors: {payload.get('errors', [])}",
             )
 
-        usage_list = payload.get("data", {}).get("usage", [])
+        data = payload.get("data")
+        usage_list = data.get("usage") if isinstance(data, dict) else None
         if not usage_list:
             return []
+        if not isinstance(usage_list, list):
+            raise SensusAnalyticsApiClientCommunicationError("Hourly data response did not include a usage list")
 
         units = usage_list[0]
         if not isinstance(units, list) or len(units) < 3:

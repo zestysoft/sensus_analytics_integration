@@ -5,8 +5,10 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
+import aiohttp
+
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import async_get_loaded_integration
 
@@ -41,7 +43,9 @@ async def async_setup_entry(
         base_url=entry.data[CONF_BASE_URL],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        session=async_get_clientsession(hass),
+        # Sensus keeps the login in a session cookie, so each entry needs its own cookie jar.
+        # Home Assistant detaches this session automatically when the entry is unloaded.
+        session=async_create_clientsession(hass, cookie_jar=aiohttp.CookieJar()),
     )
 
     coordinator = SensusAnalyticsDataUpdateCoordinator(
@@ -56,7 +60,6 @@ async def async_setup_entry(
                 DEFAULT_UPDATE_INTERVAL_MINUTES,
             ),
         ),
-        always_update=False,
     )
 
     entry.runtime_data = SensusAnalyticsData(
@@ -67,8 +70,8 @@ async def async_setup_entry(
 
     await coordinator.async_config_entry_first_refresh()
 
+    # No update listener: the options flow and the reauth/reconfigure flows each schedule a single reload
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -79,11 +82,3 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a Sensus Analytics config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_reload_entry(
-    hass: HomeAssistant,
-    entry: SensusAnalyticsConfigEntry,
-) -> None:
-    """Reload a Sensus Analytics config entry."""
-    await hass.config_entries.async_reload(entry.entry_id)

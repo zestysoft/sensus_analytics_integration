@@ -8,8 +8,8 @@ from custom_components.sensus_analytics.config_flow_handler.schemas import get_o
 from homeassistant import config_entries
 
 
-class SensusAnalyticsOptionsFlow(config_entries.OptionsFlow):
-    """Handle options flow for Sensus Analytics."""
+class SensusAnalyticsOptionsFlow(config_entries.OptionsFlowWithReload):
+    """Handle options flow for Sensus Analytics; the entry reloads once when options change."""
 
     async def async_step_init(
         self,

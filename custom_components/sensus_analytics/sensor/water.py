@@ -26,6 +26,8 @@ from custom_components.sensus_analytics.coordinator import SensusAnalyticsDataUp
 from custom_components.sensus_analytics.data import get_config_value
 from custom_components.sensus_analytics.entity import SensusAnalyticsEntity
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription, SensorStateClass
+from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import dt as dt_util
 
 CF_TO_GALLON = 7.48052
@@ -45,6 +47,9 @@ class SensusAnalyticsSensorEntityDescription(SensorEntityDescription):
     value_fn: ValueFn
     unit_fn: UnitFn | None = None
     last_reset_fn: LastResetFn | None = None
+    # The value depends on the current clock hour, so re-evaluate it at the top of every hour
+    # instead of waiting for the next poll
+    refresh_hourly: bool = False
 
 
 def _data(coordinator: SensusAnalyticsDataUpdateCoordinator) -> dict[str, Any]:
@@ -361,6 +366,7 @@ ENTITY_DESCRIPTIONS: tuple[SensusAnalyticsSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         icon="mdi:currency-usd",
+        last_reset_fn=_start_of_billing_month,
     ),
     SensusAnalyticsSensorEntityDescription(
         key="daily_fee",
@@ -370,6 +376,7 @@ ENTITY_DESCRIPTIONS: tuple[SensusAnalyticsSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         icon="mdi:currency-usd",
+        last_reset_fn=_start_of_local_day,
     ),
     SensusAnalyticsSensorEntityDescription(
         key="last_hour_usage",
@@ -380,6 +387,7 @@ ENTITY_DESCRIPTIONS: tuple[SensusAnalyticsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         icon="mdi:water",
         last_reset_fn=_previous_hour,
+        refresh_hourly=True,
     ),
     SensusAnalyticsSensorEntityDescription(
         key="last_hour_rainfall",
@@ -387,6 +395,7 @@ ENTITY_DESCRIPTIONS: tuple[SensusAnalyticsSensorEntityDescription, ...] = (
         value_fn=_last_hour_rainfall,
         native_unit_of_measurement="in",
         icon="mdi:weather-rainy",
+        refresh_hourly=True,
     ),
     SensusAnalyticsSensorEntityDescription(
         key="last_hour_temperature",
@@ -394,6 +403,7 @@ ENTITY_DESCRIPTIONS: tuple[SensusAnalyticsSensorEntityDescription, ...] = (
         value_fn=_last_hour_temperature,
         native_unit_of_measurement="°F",
         icon="mdi:thermometer",
+        refresh_hourly=True,
     ),
     SensusAnalyticsSensorEntityDescription(
         key="last_hour_timestamp",
@@ -401,6 +411,7 @@ ENTITY_DESCRIPTIONS: tuple[SensusAnalyticsSensorEntityDescription, ...] = (
         value_fn=_last_hour_timestamp,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:clock-time-nine",
+        refresh_hourly=True,
     ),
 )
 
@@ -418,6 +429,19 @@ class SensusAnalyticsSensor(SensorEntity, SensusAnalyticsEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entity_description)
         self._attr_name = f"{DEFAULT_NAME} {entity_description.label}"
+
+    async def async_added_to_hass(self) -> None:
+        """Register the hourly refresh for clock-dependent sensors."""
+        await super().async_added_to_hass()
+        if self.entity_description.refresh_hourly:
+            self.async_on_remove(
+                async_track_time_change(self.hass, self._async_handle_hour_change, minute=0, second=0),
+            )
+
+    @callback
+    def _async_handle_hour_change(self, _now: datetime) -> None:
+        """Write the state for the new hour from the already-fetched hourly data."""
+        self.async_write_ha_state()
 
     @property
     def native_value(self) -> Any:
