@@ -64,7 +64,7 @@ Reconfigure does not change the display unit or pricing. Use **Configure** (the 
 
 ## When Data Shows Up
 
-Sensus Analytics releases each day's readings at about local midnight, so a day's water appears in the sensors at the start of the next day. The **Sensus Analytics water usage** statistic used by the Energy dashboard is recorded at the hour the water was used, and late corrections replace the earlier numbers. See [When Does Data Show Up?](../../README.md#when-does-data-show-up) in the README for details.
+Sensus Analytics releases each day's readings at about local midnight, so a day's water appears in the sensors at the start of the next day. The **Sensus Analytics water usage** statistic used by the Energy dashboard is recorded on the correct day and at the correct hour the water was used, and late corrections replace the earlier numbers. See [When Does Data Show Up?](../../README.md#when-does-data-show-up) in the README for details.
 
 ## Actions
 
