@@ -67,9 +67,12 @@ class SensusAnalyticsApiClient:
             ) from exception
 
         # Spring Security redirects on success and either redirects back to the login page with an
-        # "error" query parameter or re-renders the login form (200) when the credentials are rejected
+        # error marker (for example "?error" or "login.html#/failed") or re-renders the login form (200)
+        # when the credentials are rejected
         if status == 302:
-            if "error" in urlsplit(location).query.lower():
+            redirect = urlsplit(location)
+            markers = f"{redirect.query}#{redirect.fragment}".lower()
+            if "error" in markers or "fail" in markers:
                 _raise_authentication_error("Sensus Analytics rejected the username or password")
             return
         if status in (200, 401):

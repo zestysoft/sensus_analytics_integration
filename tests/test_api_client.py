@@ -176,6 +176,7 @@ async def test_async_authenticate_raises_for_rejected_credentials(status: int) -
     [
         f"{BASE_URL}/login?error",
         f"{BASE_URL}/login.jsp?login_error=1",
+        f"{BASE_URL}/login.html#/failed",
     ],
 )
 @pytest.mark.asyncio
