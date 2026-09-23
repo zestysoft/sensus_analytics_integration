@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/zestysoft/sensus_analytics_integration/compare/v1.9.0...v1.10.0) (2026-09-23)
+
+
+### Features
+
+* add import_history action to backfill older hourly water usage ([#111](https://github.com/zestysoft/sensus_analytics_integration/issues/111)) ([20b6e0f](https://github.com/zestysoft/sensus_analytics_integration/commit/20b6e0f0407b686aa9ba7cd61dd9085684d55be5))
+
 ## [1.9.0](https://github.com/zestysoft/sensus_analytics_integration/compare/v1.8.2...v1.9.0) (2026-09-23)
 
 
