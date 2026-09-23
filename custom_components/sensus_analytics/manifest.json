@@ -1,11 +1,14 @@
 {
   "domain": "sensus_analytics",
   "name": "Sensus Analytics Integration",
-  "version": "1.7.5",
+  "codeowners": [
+    "@zestysoft"
+  ],
+  "config_flow": true,
   "documentation": "https://github.com/zestysoft/sensus_analytics_integration",
-  "dependencies": [],
-  "codeowners": ["@zestysoft"],
-  "requirements": [],
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "config_flow": true
+  "issue_tracker": "https://github.com/zestysoft/sensus_analytics_integration/issues",
+  "requirements": [],
+  "version": "1.7.5"
 }

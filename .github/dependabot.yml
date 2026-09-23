@@ -1,10 +1,93 @@
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 version: 2
 updates:
-  - package-ecosystem: "pip"
+  - package-ecosystem: "devcontainers"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"
+    cooldown:
+      default-days: 7
+    groups:
+      # Security fixes get their own group so the auto-merge workflow can tell them apart
+      # and leave them for manual review
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"
+    # Let new action versions settle for 7 days before opening a PR (same as HA Core)
+    cooldown:
+      default-days: 7
+    groups:
+      # Bundle all minor/patch action updates into a single PR; major updates stay separate
+      github-actions:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      # homeassistant is a transitive dependency pulled in by pytest-homeassistant-custom-component.
+      # Its version must stay in sync with the "homeassistant" key in hacs.json — update that manually
+      # when bumping pytest-homeassistant-custom-component (see below).
+      - dependency-name: "homeassistant"
+    # Let new releases settle for 7 days before opening a PR
+    cooldown:
+      default-days: 7
+    groups:
+      # Bundle all minor/patch Python dep updates into a single PR; major updates stay separate.
+      # pytest-homeassistant-custom-component is intentionally excluded: it tracks HA Core releases
+      # (patch = new HA version) and always gets its own PR so the coupling to hacs.json is visible.
+      # When merging its PR, also update the "homeassistant" key in hacs.json accordingly.
+      python-dependencies:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+        exclude-patterns:
+          - "pytest-homeassistant-custom-component"
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"
+    cooldown:
+      default-days: 7
+    groups:
+      npm-dependencies:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
