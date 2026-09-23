@@ -70,6 +70,5 @@ If not provided, ask for:
 - Platform: `custom_components/sensus_analytics/[platform]/__init__.py`
 - Device Info Helper: `entity_utils/device_info.py`
 - Translations: `translations/*.json`
-- Documentation: Reference [#file:docs/development/ARCHITECTURE.md]
 
 **DO NOT create tests unless explicitly requested.**

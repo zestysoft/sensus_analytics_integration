@@ -144,7 +144,7 @@ When a task completes and the developer moves to a new topic, suggest committing
 1. Research available libraries (PyPI, GitHub)
 2. Evaluate: Maintained? Async? Well-documented? Dependency footprint?
 3. Consider protocol: Simple REST → aiohttp; Complex OAuth2 → library; Standard (MQTT) → industry library
-4. Document significant decisions in `docs/development/ARCHITECTURE.md`
+4. Explain significant decisions in the PR description
 
 **Quality Scale expectations:**
 

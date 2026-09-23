@@ -76,7 +76,6 @@ This project includes [prompt files](./.github/prompts/) to help you work more e
 - **Add Entity Platform** - Add a new entity platform
 - **Add Entity to Device** - Expand device capabilities
 - **Add New Sensor** - Create sensors with proper structure
-- **Create ADR** - Record an architectural decision
 - **Create Implementation Plan** - Plan a larger change before coding
 - **Debug Coordinator Issue** - Diagnose data update problems
 - **Review Integration** - Review the integration against Home Assistant standards
