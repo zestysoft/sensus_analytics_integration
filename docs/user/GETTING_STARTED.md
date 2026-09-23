@@ -6,7 +6,7 @@ This guide covers installation and first setup for the Sensus Analytics Integrat
 
 - Home Assistant 2026.4.0 or newer
 - HACS installed
-- A working Sensus Analytics account
+- A Sensus Analytics username and password that work on your Sensus site's own login page (logins that go through a city billing website, known as single sign-on, are not supported yet)
 - Your Sensus Analytics account number and meter number
 
 ## Installation

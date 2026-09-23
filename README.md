@@ -71,6 +71,9 @@ The setup flow asks for:
 | Tier 3 Price   | No       | Tier 3 price per display unit                                                           |
 | Service Fee    | Yes      | Fixed service fee for billing estimates                                                 |
 
+> [!IMPORTANT]
+> You need a username and password that work directly on your Sensus Analytics site's own login page. Some cities, such as Houston, have you sign in through the city's water billing website instead, which then passes you on to Sensus (single sign-on). Those logins are not supported yet. To check yours, open your Base URL in a browser: if it sends you to a different website to sign in, your account uses single sign-on.
+
 ### Pricing
 
 The billing cost and daily fee sensors are estimates based on the prices you enter.
