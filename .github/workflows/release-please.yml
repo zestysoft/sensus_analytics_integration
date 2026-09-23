@@ -34,7 +34,9 @@ jobs:
       # Merge the release PR on its own once the required checks pass
       - name: Enable auto-merge for the release PR
         if: steps.release.outputs.prs_created == 'true'
-        run: gh pr merge --auto --squash "$PR_NUMBER" --repo "$GITHUB_REPOSITORY"
+        # Parse in the shell: env expressions are evaluated even when the step is skipped,
+        # and fromJSON() fails on the empty output when no release PR exists
+        run: gh pr merge --auto --squash "$(jq -r .number <<<"$PR_JSON")" --repo "$GITHUB_REPOSITORY"
         env:
-          PR_NUMBER: ${{ fromJSON(steps.release.outputs.pr).number }}
+          PR_JSON: ${{ steps.release.outputs.pr }}
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
