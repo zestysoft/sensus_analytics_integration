@@ -36,7 +36,7 @@ Generate code that passes these checks on first run. As an AI agent, you should 
 
 **Package Structure (DO NOT create other packages):**
 
-- `coordinator/` — DataUpdateCoordinator (base + data_processing + error_handling + listeners)
+- `coordinator/` — DataUpdateCoordinator (`base.py`)
 - `api/` — External API client (async aiohttp)
 - `entity/` — Base entity class (`SensusAnalyticsEntity`)
 - `entity_utils/` — Entity-specific helpers (device_info, state formatting)
@@ -50,7 +50,7 @@ Generate code that passes these checks on first run. As an AI agent, you should 
 **Key patterns** (details in path-specific `*.instructions.md`):
 
 - Entity MRO: `(PlatformEntity, SensusAnalyticsEntity)` — order matters
-- Unique ID: `{entry_id}_{description.key}` (set in base entity)
+- Unique ID: `sensus_analytics_{entry_id}_{key}` (set in base entity) — must not change; pre-1.8 installs depend on it
 - Services: register in `async_setup()`, NOT `async_setup_entry()` (Quality Scale requirement)
 - Config entry data: `entry.runtime_data.client` / `entry.runtime_data.coordinator`
 

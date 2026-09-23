@@ -24,22 +24,27 @@ The base URL is normalized with a trailing slash. If no scheme is provided, `htt
 The billing cost and daily fee sensors are estimates based on the prices you enter.
 
 - **Tier limits and prices use your display unit.** If Unit Type is `CCF`, enter your price per CCF and tier limits in CCF. If it is `gal`, use gallons. Easiest: pick the Unit Type your water bill uses, then copy its numbers as-is.
-- **One flat rate:** enter only Tier 1 Price and leave the tier limits at 0.
-- **Two tiers:** set Tier 1 Limit, Tier 1 Price, and Tier 2 Price. Leave Tier 2 Limit at 0.
+- **Tier limits are optional.** They are blank by default; leave a limit blank (or 0) when you don't need it.
+- **One flat rate:** enter only Tier 1 Price and leave both tier limits blank (or 0).
+- **Two tiers:** set Tier 1 Limit, Tier 1 Price, and Tier 2 Price. Leave Tier 2 Limit blank (or 0).
 - **CF vs. CCF:** Sensus meters usually report in `CF` (cubic feet), shown by the Native Usage Unit sensor. The integration converts that to your display unit. 1 CCF is 100 cubic feet, or about 748 gallons.
 
 ## Options Flow
 
-The options flow controls display and calculation settings:
+Use **Settings** -> **Devices & Services** -> **Sensus Analytics** -> **Configure** to change display and calculation settings:
 
-| Option          | Default     | Description                                           |
-| --------------- | ----------- | ----------------------------------------------------- |
-| Unit Type       | `CCF`       | Display usage as CCF or gallons                       |
-| Tier 1 Price    | Yes         | Tier 1 price per display unit (per CCF or per gallon) |
-| Service Fee     | `15.0`      | Fixed billing service fee                             |
-| Update Interval | `5` minutes | Polling interval, 1 to 1440 minutes                   |
+| Option          | Default     | Description                                                                 |
+| --------------- | ----------- | --------------------------------------------------------------------------- |
+| Unit Type       | `CCF`       | Display usage as CCF or gallons                                             |
+| Tier 1 Limit    | Blank       | Usage billed at the tier 1 price before tier 2 starts, in your display unit |
+| Tier 1 Price    | `0.0128`    | Tier 1 price per display unit (per CCF or per gallon)                       |
+| Tier 2 Limit    | Blank       | Usage billed at the tier 2 price before tier 3 starts, in your display unit |
+| Tier 2 Price    | Blank       | Tier 2 price per display unit                                               |
+| Tier 3 Price    | Blank       | Tier 3 price per display unit                                               |
+| Service Fee     | `15.0`      | Fixed billing service fee                                                   |
+| Update Interval | `5` minutes | Polling interval, 1 to 1440 minutes                                         |
 
-Blank tier limit or price fields are treated as zero.
+Tier 1 Price, Service Fee, Unit Type, and Update Interval are required. Blank tier limit or price fields are treated as zero.
 
 ## Reconfiguration
 
@@ -53,14 +58,20 @@ Use **Reconfigure** when changing connection settings:
 
 Changing account or meter number also updates the config entry unique ID. The flow prevents configuring the same account and meter combination twice.
 
-## Services
+Reconfigure does not change the display unit or pricing. Use **Configure** (the options flow above) for those.
+
+## When Data Shows Up
+
+Sensus Analytics releases each day's readings at about local midnight, so a day's water appears in Home Assistant at the start of the next day. See [When Does Data Show Up?](../../README.md#when-does-data-show-up) in the README for details.
+
+## Actions
 
 ### `sensus_analytics.reload_data`
 
-Refresh all loaded Sensus Analytics entries immediately.
+Refresh all loaded Sensus Analytics entries immediately. This does not make new data arrive sooner; it only fetches what Sensus Analytics has already published.
 
 ```yaml
-service: sensus_analytics.reload_data
+action: sensus_analytics.reload_data
 ```
 
 ## Diagnostics

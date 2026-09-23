@@ -225,7 +225,6 @@ Create a new ADR in `docs/development/adr/NNNN-title-of-decision.md`:
 - **Domain:** `sensus_analytics`
 - **Class prefix:** `SensusAnalytics`
 - **Architecture docs:** `docs/development/ARCHITECTURE.md`
-- **Decisions log:** `docs/development/DECISIONS.md`
 
 Reference existing architecture documentation and ensure the ADR complements it without duplicating content.
 
@@ -234,7 +233,7 @@ Reference existing architecture documentation and ensure the ADR complements it 
 After creating the ADR:
 
 1. Ask if content needs adjustment
-2. Suggest adding reference to `docs/development/DECISIONS.md` if it exists
+2. Suggest adding a reference to it in `docs/development/ARCHITECTURE.md`
 3. Suggest relevant code locations for implementation
 4. Ask: "Should I proceed with implementing this decision?"
 

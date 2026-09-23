@@ -4,7 +4,7 @@ This document provides guidance for AI coding agents working on this Home Assist
 
 ## Project Overview
 
-This is a Home Assistant custom integration that was generated from a blueprint template. The integration follows Home Assistant Core development patterns and quality standards.
+This is an existing Home Assistant custom integration that adopted the development tooling from the `jpawlowski/hacs.integration_blueprint` template (it was not generated from it). The integration follows Home Assistant Core development patterns and quality standards.
 
 **Integration details:**
 
@@ -79,7 +79,7 @@ If a developer requests something that contradicts these instructions:
 
 ### Maintaining These Instructions
 
-**This project was recently initialized from a template.** Instructions should evolve as the project matures:
+**This project adopted its tooling and instructions from a template.** Instructions should evolve as the project matures:
 
 - Refine guidelines based on actual project needs
 - Remove outdated rules that no longer apply
@@ -125,6 +125,8 @@ When a task completes and the developer moves to a new topic, suggest committing
 
 **Commit message format:** Follow [Conventional Commits](https://www.conventionalcommits.org/) — see `.github/instructions/blueprint.commit-message.instructions.md` for full conventions, types, scopes, and examples.
 
+**PR titles (CRITICAL):** Pull requests are squash-merged and release-please builds releases and the changelog from the resulting commit on `main`, so **PR titles must be Conventional Commits** (`fix:` → patch, `feat:` → minor, `!`/`BREAKING CHANGE:` → major; `chore`/`ci`/`docs`/`test`/`refactor` → no release). See `docs/development/RELEASE.md`.
+
 ## Custom Integration Flexibility
 
 **This is a CUSTOM integration, not a Home Assistant Core integration.** While we follow Core patterns for quality and maintainability, we have more flexibility in implementation decisions:
@@ -142,7 +144,7 @@ When a task completes and the developer moves to a new topic, suggest committing
 1. Research available libraries (PyPI, GitHub)
 2. Evaluate: Maintained? Async? Well-documented? Dependency footprint?
 3. Consider protocol: Simple REST → aiohttp; Complex OAuth2 → library; Standard (MQTT) → industry library
-4. Document decision in `docs/development/DECISIONS.md`
+4. Document significant decisions in `docs/development/ARCHITECTURE.md`
 
 **Quality Scale expectations:**
 
@@ -224,7 +226,7 @@ This integration uses the following identifiers consistently:
 - Entities → Coordinator → API Client (never skip layers)
 - Each platform in own directory with `__init__.py`
 - One entity class per file for clarity
-- Individual entity classes in separate files (e.g., `air_quality.py`)
+- Individual entity classes in separate files (e.g., `sensor/water.py`)
 - Use `EntityDescription` dataclasses for static entity metadata
 
 **Code organization principles:**
@@ -241,7 +243,7 @@ This integration uses the following identifiers consistently:
 
 ### Device Info
 
-All entities should provide consistent device info via the base entity class (manufacturer, model, serial number, configuration URL, firmware version).
+All entities provide consistent device info via the base entity class (`entity/base.py`). It currently sets the identifiers, name, manufacturer, model, and configuration URL; Sensus Analytics does not expose a serial number or firmware version.
 
 ### Integration Manifest
 
@@ -308,19 +310,12 @@ See `.github/instructions/blueprint.manifest.instructions.md` for comprehensive 
 - Update entry with `hass.config_entries.async_update_entry()`
 - Return `False` to reject downgrades
 
-**Scaffold commands:**
-
-```bash
-python3 -m script.scaffold config_flow_discovery  # Discoverable, no auth
-python3 -m script.scaffold config_flow_oauth2     # OAuth2 flow
-```
-
 ## Home Assistant Patterns
 
 **Config flow:**
 
 - Implement in `config_flow_handler/` package
-- Support user setup, discovery, reauth, reconfigure
+- Support user setup, reauth, reconfigure (no discovery: Sensus Analytics is a cloud service)
 - Always set unique_id for discovered entries
 
 See `.github/instructions/blueprint.config_flow.instructions.md` for comprehensive patterns.
@@ -347,16 +342,17 @@ See `.github/instructions/blueprint.coordinator.instructions.md` and `.github/in
 - Inherit from platform base + `SensusAnalyticsEntity`
 - Read from `coordinator.data`, never call API directly
 - Use `EntityDescription` for static metadata
+- Unique IDs must stay `sensus_analytics_{entry_id}_{key}` (set in `entity/base.py`) for compatibility with pre-1.8 installs; never change this format
 
 See `.github/instructions/blueprint.entities.instructions.md` for entity patterns.
 
 **Repairs:**
 
-- Create `repairs.py` in integration root only when the integration raises actionable repair issues
-- Use `async_create_issue()` with severity levels (WARNING, ERROR, CRITICAL)
+- `repairs.py` ships intentionally as a compatibility shim: it implements `async_create_fix_flow` but the integration raises no repair issues yet. Keep it; don't delete it
+- Rule: if `repairs.py` exists, it must implement `async_create_fix_flow` (Home Assistant treats the file as a platform and logs an error otherwise)
+- When adding actionable repair issues, use `async_create_issue()` with severity levels (WARNING, ERROR, CRITICAL)
 - Implement `RepairsFlow` for guided user fixes
 - Delete issues after successful repair
-- Do not keep an empty placeholder `repairs.py`; Home Assistant treats the file as a platform and logs an error if it does not implement the repairs API
 
 See `.github/instructions/blueprint.repairs.instructions.md` for comprehensive patterns.
 
@@ -504,7 +500,7 @@ After auto-fixes are applied, only manually edit files for errors that **remain 
 
 **When gathering context:**
 
-- Start with semantic_search (1-2 queries maximum)
+- Start by searching the codebase (1-2 searches maximum)
 - Read 3-5 most relevant files based on search results
 - If still unclear, read 2-3 more specific files
 - **After ~10 file reads, you should have enough context** - make a decision or ask for clarification
@@ -512,7 +508,7 @@ After auto-fixes are applied, only manually edit files for errors that **remain 
 
 **Context gathering strategy:**
 
-1. **First pass** - semantic_search to find relevant areas (1-2 queries)
+1. **First pass** - Search the codebase to find relevant areas (1-2 searches)
 2. **Second pass** - Read the 3-5 most relevant files identified
 3. **Evaluate** - Do you have enough context to proceed? If yes, start implementation
 4. **Third pass (if needed)** - Read 2-3 additional specific files for missing details
@@ -525,7 +521,7 @@ After auto-fixes are applied, only manually edit files for errors that **remain 
 
 **Test structure:**
 
-- `tests/` mirrors `custom_components/sensus_analytics/` structure
+- `tests/` is flat: `test_api_client.py`, `test_config_flow_helpers.py`, and `test_sensors.py` (it does not mirror the package structure)
 - Use fixtures for common setup (Home Assistant mock, coordinator, etc.)
 - Mock external API calls
 
@@ -533,8 +529,9 @@ After auto-fixes are applied, only manually edit files for errors that **remain 
 
 ```bash
 script/test                           # All tests
-script/test --cov-html                # With coverage report
-script/test --snapshot-update         # Update Syrupy snapshots
+script/test --cov                     # With terminal coverage report
+script/test --cov-html                # With HTML coverage report
+script/test -k test_name              # Extra arguments are passed to pytest
 ```
 
 See `.github/instructions/blueprint.tests.instructions.md` for comprehensive testing patterns.
@@ -624,23 +621,24 @@ See `.github/copilot-instructions.md` for detailed workflow guidance.
 
 ## Tool Parallelization
 
-**Safe to call in parallel:**
+Tool names differ between agents (Claude Code, Gemini, GitHub Copilot); these rules apply to whichever equivalent tools you have.
 
-- Multiple `read_file` operations (different files or different sections of same file)
-- `file_search` + `read_file` + `grep_search` (independent read-only operations)
-- `semantic_search` followed by parallel `read_file` of results (but only 1 semantic_search at a time)
+**Safe to do in parallel:**
 
-**Never call in parallel:**
+- Reading multiple files (or different sections of the same file)
+- Independent read-only operations, such as finding files, reading files, and searching file contents
+- Reading the files returned by a codebase search
 
-- Multiple `run_in_terminal` commands (execute sequentially, wait for output)
-- Multiple `replace_string_in_file` on the same file (use `multi_replace_string_in_file` instead)
-- `semantic_search` with other `semantic_search` (execute one at a time)
+**Never do in parallel:**
+
+- Running terminal commands (run them one at a time and wait for the output)
+- Multiple separate edits to the same file (make them in one multi-edit operation if your tools support it, or one after another)
 
 **Best practices:**
 
 - Batch independent read operations together in one parallel call
 - After gathering context in parallel, provide brief progress update before proceeding
-- For file edits, use `multi_replace_string_in_file` when making multiple changes
+- When making several changes to one file, apply them together rather than as competing parallel edits
 - Terminal commands must always be sequential to see output before next command
 
 ## Additional Resources

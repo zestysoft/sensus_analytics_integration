@@ -21,6 +21,7 @@ custom_components/sensus_analytics/
 ├── __init__.py                      # Setup, unload, reload, platform forwarding
 ├── api/
 │   └── client.py                    # Async Sensus web endpoint client
+├── brand/                           # Integration icons (icon/dark_icon, 1x and 2x)
 ├── config_flow.py                   # Home Assistant discovery shim
 ├── config_flow_handler/
 │   ├── config_flow.py               # user, reconfigure, and reauth flows
@@ -33,6 +34,7 @@ custom_components/sensus_analytics/
 ├── diagnostics.py                   # Redacted diagnostics output
 ├── entity/
 │   └── base.py                      # Shared coordinator entity behavior
+├── repairs.py                       # Compatibility shim (see below)
 ├── sensor/
 │   └── water.py                     # Water meter sensor descriptions/entities
 ├── service_actions/
@@ -40,6 +42,8 @@ custom_components/sensus_analytics/
 ├── services.yaml                    # Service metadata
 └── translations/en.json             # Config, options, and entity strings
 ```
+
+`repairs.py` is intentionally present as a compatibility shim. Home Assistant requires a repairs platform file, when one exists, to implement `async_create_fix_flow`; this one does, but the integration does not raise any repair issues.
 
 ## Data Fetching
 

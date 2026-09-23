@@ -5,12 +5,12 @@
 ```yaml
 automation:
   - alias: "Sensus high daily water usage"
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.sensus_analytics_daily_usage
         above: 500
-    action:
-      - service: notify.notify
+    actions:
+      - action: notify.notify
         data:
           message: "Daily water usage is {{ states('sensor.sensus_analytics_daily_usage') }} {{ state_attr('sensor.sensus_analytics_daily_usage', 'unit_of_measurement') }}."
 ```
@@ -20,11 +20,11 @@ automation:
 ```yaml
 automation:
   - alias: "Refresh Sensus before morning report"
-    trigger:
-      - platform: time
+    triggers:
+      - trigger: time
         at: "06:00:00"
-    action:
-      - service: sensus_analytics.reload_data
+    actions:
+      - action: sensus_analytics.reload_data
 ```
 
 ## Dashboard Card
