@@ -45,8 +45,9 @@ class SensusAnalyticsDataUpdateCoordinator(DataUpdateCoordinator):
                 translation_key="authentication_failed",
             ) from exception
         except SensusAnalyticsApiClientError as exception:
-            LOGGER.exception("Error communicating with Sensus Analytics")
+            # The coordinator logs the first failure and the recovery, so don't log every poll here
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"error": str(exception)},
             ) from exception

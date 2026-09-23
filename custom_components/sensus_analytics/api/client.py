@@ -124,12 +124,19 @@ class SensusAnalyticsApiClient:
             ) from exception
 
         try:
-            widget_list = payload["widgetList"]
-            return widget_list[0]["data"]["devices"][0]
+            widget_data = payload["widgetList"][0]["data"]
         except (KeyError, IndexError, TypeError) as exception:
             raise SensusAnalyticsApiClientCommunicationError(
-                "Daily data response did not contain a meter device",
+                "Daily data response did not contain meter data",
             ) from exception
+
+        # Sensus answers with "nodata" and an empty device list while its backend is having trouble
+        devices = widget_data.get("devices") if isinstance(widget_data, dict) else None
+        if not devices:
+            raise SensusAnalyticsApiClientCommunicationError(
+                "Sensus Analytics returned no meter data; the service may be temporarily unavailable",
+            )
+        return devices[0]
 
     async def _async_get_hourly_data(
         self,

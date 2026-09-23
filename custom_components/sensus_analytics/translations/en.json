@@ -12,12 +12,21 @@
           "account_number": "Account Number",
           "meter_number": "Meter Number",
           "unit_type": "Unit Type",
-          "tier1_gallons": "Tier 1 Gallons",
+          "tier1_gallons": "Tier 1 Limit",
           "tier1_price": "Tier 1 Price",
-          "tier2_gallons": "Tier 2 Gallons",
+          "tier2_gallons": "Tier 2 Limit",
           "tier2_price": "Tier 2 Price",
           "tier3_price": "Tier 3 Price",
           "service_fee": "Service Fee"
+        },
+        "data_description": {
+          "unit_type": "Display usage values in CCF (100 cubic feet) or gallons. Tier limits and prices below use this same unit.",
+          "tier1_gallons": "How much usage is billed at the tier 1 price before tier 2 starts, in your display unit. Leave at 0 if you have a single flat rate.",
+          "tier1_price": "Tier 1 price per display unit (per CCF or per gallon), as shown on your water bill.",
+          "tier2_gallons": "How much usage is billed at the tier 2 price before tier 3 starts, in your display unit. Leave at 0 if you have two tiers or fewer.",
+          "tier2_price": "Tier 2 price per display unit.",
+          "tier3_price": "Tier 3 price per display unit.",
+          "service_fee": "Fixed billing service fee."
         }
       },
       "reconfigure": {
@@ -30,12 +39,21 @@
           "account_number": "Account Number",
           "meter_number": "Meter Number",
           "unit_type": "Unit Type",
-          "tier1_gallons": "Tier 1 Gallons",
+          "tier1_gallons": "Tier 1 Limit",
           "tier1_price": "Tier 1 Price",
-          "tier2_gallons": "Tier 2 Gallons",
+          "tier2_gallons": "Tier 2 Limit",
           "tier2_price": "Tier 2 Price",
           "tier3_price": "Tier 3 Price",
           "service_fee": "Service Fee"
+        },
+        "data_description": {
+          "unit_type": "Display usage values in CCF (100 cubic feet) or gallons. Tier limits and prices below use this same unit.",
+          "tier1_gallons": "How much usage is billed at the tier 1 price before tier 2 starts, in your display unit. Leave at 0 if you have a single flat rate.",
+          "tier1_price": "Tier 1 price per display unit (per CCF or per gallon), as shown on your water bill.",
+          "tier2_gallons": "How much usage is billed at the tier 2 price before tier 3 starts, in your display unit. Leave at 0 if you have two tiers or fewer.",
+          "tier2_price": "Tier 2 price per display unit.",
+          "tier3_price": "Tier 3 price per display unit.",
+          "service_fee": "Fixed billing service fee."
         }
       },
       "reauth_confirm": {
@@ -62,21 +80,21 @@
         "title": "Configure Sensus Analytics Options",
         "data": {
           "unit_type": "Unit Type",
-          "tier1_gallons": "Tier 1 Gallons",
+          "tier1_gallons": "Tier 1 Limit",
           "tier1_price": "Tier 1 Price",
-          "tier2_gallons": "Tier 2 Gallons",
+          "tier2_gallons": "Tier 2 Limit",
           "tier2_price": "Tier 2 Price",
           "tier3_price": "Tier 3 Price",
           "service_fee": "Service Fee",
           "update_interval_minutes": "Update Interval"
         },
         "data_description": {
-          "unit_type": "Display usage values in CCF or gallons.",
-          "tier1_gallons": "Number of gallons charged at the tier 1 rate before tier 2 pricing starts.",
-          "tier1_price": "Tier 1 price per gallon.",
-          "tier2_gallons": "Number of gallons charged at the tier 2 rate before tier 3 pricing starts.",
-          "tier2_price": "Tier 2 price per gallon.",
-          "tier3_price": "Tier 3 price per gallon.",
+          "unit_type": "Display usage values in CCF (100 cubic feet) or gallons. Tier limits and prices below use this same unit.",
+          "tier1_gallons": "How much usage is billed at the tier 1 price before tier 2 starts, in your display unit. Leave at 0 if you have a single flat rate.",
+          "tier1_price": "Tier 1 price per display unit (per CCF or per gallon), as shown on your water bill.",
+          "tier2_gallons": "How much usage is billed at the tier 2 price before tier 3 starts, in your display unit. Leave at 0 if you have two tiers or fewer.",
+          "tier2_price": "Tier 2 price per display unit.",
+          "tier3_price": "Tier 3 price per display unit.",
           "service_fee": "Fixed billing service fee.",
           "update_interval_minutes": "How often to refresh data from Sensus Analytics."
         }
@@ -88,7 +106,7 @@
       "message": "Authentication failed during data update."
     },
     "update_failed": {
-      "message": "Failed to update data from Sensus Analytics."
+      "message": "Failed to update data from Sensus Analytics: {error}"
     }
   },
   "entity": {
