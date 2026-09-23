@@ -26,9 +26,9 @@ Pull requests are squash-merged, so the PR title becomes the commit message on `
 
 | Title prefix                                   | Release               |
 | ---------------------------------------------- | --------------------- |
-| `fix:` (or `perf:`)                            | Patch (1.8.1 → 1.8.2) |
-| `feat:`                                        | Minor (1.8.1 → 1.9.0) |
-| Breaking change (`feat!:`, `fix!:`, ...)       | Major (1.8.1 → 2.0.0) |
+| `fix:` (or `perf:`)                            | Patch (1.2.3 → 1.2.4) |
+| `feat:`                                        | Minor (1.2.3 → 1.3.0) |
+| Breaking change (`feat!:`, `fix!:`, ...)       | Major (1.2.3 → 2.0.0) |
 | `chore:`, `ci:`, `docs:`, `test:`, `refactor:` | No release            |
 
 For example: `fix: handle empty hourly usage data` or `feat: add weekly usage sensor`.
