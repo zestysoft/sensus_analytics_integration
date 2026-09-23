@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/zestysoft/sensus_analytics_integration/compare/v1.8.0...v1.8.1) (2026-09-23)
+
+
+### Bug Fixes
+
+* price tiers in the display unit and handle Sensus no-data responses ([#100](https://github.com/zestysoft/sensus_analytics_integration/issues/100)) ([48f8594](https://github.com/zestysoft/sensus_analytics_integration/commit/48f8594270df88a645015dc304d089e994f22987))
+
 ## [1.8.0](https://github.com/zestysoft/sensus_analytics_integration/compare/v1.7.5...v1.8.0) (2026-09-23)
 
 ### Features
