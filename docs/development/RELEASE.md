@@ -58,9 +58,9 @@ The project is past `1.0.0`, so standard SemVer applies:
 
 | Commit type                                     | Version change                      |
 | ----------------------------------------------- | ----------------------------------- |
-| `fix`, `perf`                                   | patch bump (e.g. `1.8.1` → `1.8.2`) |
-| `feat`                                          | minor bump (e.g. `1.8.1` → `1.9.0`) |
-| `feat!`, `fix!`, or a `BREAKING CHANGE:` footer | major bump (e.g. `1.8.1` → `2.0.0`) |
+| `fix`, `perf`                                   | patch bump (e.g. `1.2.3` → `1.2.4`) |
+| `feat`                                          | minor bump (e.g. `1.2.3` → `1.3.0`) |
+| `feat!`, `fix!`, or a `BREAKING CHANGE:` footer | major bump (e.g. `1.2.3` → `2.0.0`) |
 | `chore`, `ci`, `docs`, `test`, `refactor`       | no release                          |
 
 ### What Appears in the Changelog
@@ -81,7 +81,7 @@ The project is past `1.0.0`, so standard SemVer applies:
 Reads the canonical version from `manifest.json`.
 
 ```bash
-./script/version              # Print: 1.8.1
+./script/version              # Print the current version, e.g. 1.2.3
 ./script/version --tag        # Print: v1.8.1
 ./script/version --check      # Verify manifest.json matches .release-please-manifest.json
 ```
