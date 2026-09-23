@@ -17,7 +17,7 @@ A custom Home Assistant integration that monitors water usage from Sensus Analyt
 - Meter odometer and billing usage
 - Estimated billing cost and daily usage fee from tiered pricing
 - Last-hour usage, rainfall, temperature, and timestamp from the previous day
-- Hourly water usage in the Energy dashboard, recorded at the hour the water was used
+- Hourly water usage in the Energy dashboard, recorded on the correct day and at the correct hour
 - UI setup, reconfiguration, reauthentication, and options flow
 - Manual `sensus_analytics.reload_data` action
 
@@ -111,7 +111,7 @@ Use **Reconfigure** to update the URL, credentials, account number, or meter num
 
 ## Energy Dashboard
 
-The integration imports Sensus hourly usage into Home Assistant's long-term statistics as **Sensus Analytics water usage**. Each hour is recorded at the time the water was actually used, so the Energy dashboard's water totals match the Sensus portal day for day.
+The integration imports Sensus hourly usage into Home Assistant's long-term statistics as **Sensus Analytics water usage**. Each hour's water is recorded on the **same day and at the same hour it was actually used**, not when Home Assistant received it. For example, water used at 7 AM on Monday shows up in the Energy dashboard at 7 AM on Monday, even though Sensus only publishes it after midnight. The Energy dashboard's daily and hourly charts match the Sensus portal.
 
 To use it (or to switch over after updating from an older version):
 
@@ -122,7 +122,7 @@ To use it (or to switch over after updating from an older version):
 Good to know:
 
 - **It backfills 30 days.** The first import also fills in the 30 days before yesterday, so the Energy dashboard has history right away. If Home Assistant is offline for a few days, the missing days are filled in when it comes back.
-- **Data still arrives after midnight**, but it lands on the correct hours. Yesterday's hours stay empty until Sensus publishes them, and late corrections replace the earlier numbers.
+- **Data still arrives after midnight, but it lands on the correct day and hour.** Yesterday stays empty until Sensus publishes it (around midnight), then fills in with each hour in its right place. Late corrections replace the earlier numbers.
 - **The statistic uses your display unit.** Changing Unit Type starts a new statistic (backfilled the same way), so pick **Sensus Analytics water usage** again in the Energy settings afterwards.
 - **With more than one meter**, each statistic's name ends with its meter number.
 - **The Last Hour sensors stay.** They still show the same clock hour from the previous day and remain useful for automations.
@@ -133,7 +133,7 @@ Water data from Sensus Analytics is not real time, so it is normal for the senso
 
 - **Data arrives once a day.** Sensus Analytics usually holds the day's readings and releases the whole previous day at about local midnight. Small late corrections can trickle in over the next few hours (updates have been seen between about 1 AM and 8 AM).
 - **Sensors record data when it arrives.** Home Assistant can't backdate sensor history, so a day's water appears in the sensors at the start of the next day.
-- **The Energy dashboard shows water at the right hour.** The [Sensus Analytics water usage](#energy-dashboard) statistic is backdated to the hour the water was used, so yesterday's usage shows up on yesterday once Sensus publishes it.
+- **The Energy dashboard shows water on the correct day and hour.** The [Sensus Analytics water usage](#energy-dashboard) statistic is backdated to when the water was used: Monday's 7 AM shower shows up at 7 AM on Monday, not on Tuesday. It appears once Sensus publishes the day, around midnight.
 - **Daily Usage and Last Read describe the previous day.**
 - **The Last Hour sensors show the same clock hour from the previous day.**
 - **Reloading won't make data arrive sooner.** The `sensus_analytics.reload_data` action only fetches what Sensus Analytics has already published.
