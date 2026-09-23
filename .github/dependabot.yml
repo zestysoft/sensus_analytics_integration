@@ -8,6 +8,15 @@ updates:
       day: "monday"
     commit-message:
       prefix: "chore(deps)"
+    cooldown:
+      default-days: 7
+    groups:
+      # Security fixes get their own group so the auto-merge workflow can tell them apart
+      # and leave them for manual review
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -26,6 +35,10 @@ updates:
         update-types:
           - minor
           - patch
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: "pip"
     directory: "/"
@@ -39,10 +52,9 @@ updates:
       # Its version must stay in sync with the "homeassistant" key in hacs.json — update that manually
       # when bumping pytest-homeassistant-custom-component (see below).
       - dependency-name: "homeassistant"
-    # Let patch releases settle 3 days, minor releases 7 days before opening a PR
+    # Let new releases settle for 7 days before opening a PR
     cooldown:
-      semver-patch-days: 3
-      semver-minor-days: 7
+      default-days: 7
     groups:
       # Bundle all minor/patch Python dep updates into a single PR; major updates stay separate.
       # pytest-homeassistant-custom-component is intentionally excluded: it tracks HA Core releases
@@ -55,3 +67,27 @@ updates:
           - patch
         exclude-patterns:
           - "pytest-homeassistant-custom-component"
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"
+    cooldown:
+      default-days: 7
+    groups:
+      npm-dependencies:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
