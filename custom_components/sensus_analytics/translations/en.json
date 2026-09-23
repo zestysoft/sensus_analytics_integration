@@ -93,12 +93,38 @@
     },
     "update_failed": {
       "message": "Failed to update data from Sensus Analytics: {error}"
+    },
+    "start_date_too_recent": {
+      "message": "The start date must be yesterday ({latest}) or earlier. Sensus Analytics only publishes a day after it ends."
+    },
+    "start_date_too_old": {
+      "message": "The start date can be at most {years} years ago ({earliest})."
+    },
+    "no_loaded_entry": {
+      "message": "No loaded Sensus Analytics entry matches this request."
+    },
+    "history_import_running": {
+      "message": "A history import is already running for {title}. Wait for its notification, then try again."
     }
   },
   "services": {
     "reload_data": {
       "name": "Reload data",
       "description": "Fetches the latest data from Sensus Analytics for all configured meters."
+    },
+    "import_history": {
+      "name": "Import history",
+      "description": "Imports older hourly water usage from Sensus Analytics into the Energy dashboard statistic. Runs in the background, one request per day, and shows a notification when it finishes.",
+      "fields": {
+        "start_date": {
+          "name": "Start date",
+          "description": "First day to import, up to 3 years ago. Days where Sensus Analytics has no hourly data are skipped."
+        },
+        "config_entry_id": {
+          "name": "Meter",
+          "description": "The Sensus Analytics entry to import. Leave empty to import every configured meter."
+        }
+      }
     }
   },
   "entity": {

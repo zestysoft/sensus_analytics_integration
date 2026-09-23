@@ -20,6 +20,7 @@ A custom Home Assistant integration that monitors water usage from Sensus Analyt
 - Hourly water usage in the Energy dashboard, recorded on the correct day and at the correct hour
 - UI setup, reconfiguration, reauthentication, and options flow
 - Manual `sensus_analytics.reload_data` action
+- `sensus_analytics.import_history` action to import older hourly history into the Energy dashboard
 
 **This integration sets up the following platform.**
 
@@ -121,11 +122,25 @@ To use it (or to switch over after updating from an older version):
 
 Good to know:
 
-- **It backfills 30 days.** The first import also fills in the 30 days before yesterday, so the Energy dashboard has history right away. If Home Assistant is offline for a few days, the missing days are filled in when it comes back.
+- **It backfills 30 days.** The first import also fills in the 30 days before yesterday, so the Energy dashboard has history right away. If Home Assistant is offline for a few days, the missing days are filled in when it comes back. To go further back, see [Importing older history](#importing-older-history).
 - **Data still arrives after midnight, but it lands on the correct day and hour.** Yesterday stays empty until Sensus publishes it (around midnight), then fills in with each hour in its right place. Late corrections replace the earlier numbers.
 - **The statistic uses your display unit.** Changing Unit Type starts a new statistic (backfilled the same way), so pick **Sensus Analytics water usage** again in the Energy settings afterwards.
 - **With more than one meter**, each statistic's name ends with its meter number.
 - **The Last Hour sensors stay.** They still show the same clock hour from the previous day and remain useful for automations.
+
+### Importing older history
+
+The automatic import only goes back 30 days. To add older history:
+
+1. Go to **Developer Tools** -> **Actions** and pick **Sensus Analytics: Import history**.
+2. Choose a **Start date** (up to 3 years ago) and select **Perform action**.
+
+Good to know:
+
+- **It runs in the background.** Home Assistant shows a notification when it finishes, with how many days were imported.
+- **It makes one request per day**, so a year of history takes several minutes.
+- **Sensus may not keep hourly data that far back.** The import starts from the first day that has data and the notification tells you which day that was.
+- **It's safe to run again.** Days already imported are replaced, not added twice, and Energy dashboard totals stay correct. If any day can't be downloaded, nothing is changed; try again later.
 
 ## When Does Data Show Up?
 
@@ -146,6 +161,16 @@ Manually refresh data for all loaded Sensus Analytics entries.
 
 ```yaml
 action: sensus_analytics.reload_data
+```
+
+### `sensus_analytics.import_history`
+
+Import hourly water usage from a start date through yesterday into the **Sensus Analytics water usage** statistic. Runs in the background and shows a notification when done. Add `config_entry_id` to import only one meter. See [Importing older history](#importing-older-history).
+
+```yaml
+action: sensus_analytics.import_history
+data:
+  start_date: "2025-09-01"
 ```
 
 ## Development

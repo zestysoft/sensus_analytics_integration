@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
-from custom_components.sensus_analytics.const import DOMAIN, LOGGER, SERVICE_RELOAD_DATA
+from custom_components.sensus_analytics.const import DOMAIN, LOGGER, SERVICE_IMPORT_HISTORY, SERVICE_RELOAD_DATA
+
+from .import_history import IMPORT_HISTORY_SCHEMA, async_handle_import_history
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
@@ -32,4 +34,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_RELOAD_DATA,
         handle_reload_data,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_IMPORT_HISTORY,
+        async_handle_import_history,
+        schema=IMPORT_HISTORY_SCHEMA,
     )

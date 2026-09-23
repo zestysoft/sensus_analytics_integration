@@ -14,11 +14,16 @@ Every successful coordinator refresh schedules an import run in the background:
   gap since the last imported hour (for example after Home Assistant was offline).
 - The previous day is always rewritten, with the running sum rebuilt from the last statistic
   before the first rewritten hour, so corrections never double count.
+
+The ``import_history`` action imports older history on demand (see ``async_import_history``):
+it fetches every day from a chosen start date, writes nothing unless every day was fetched, and
+rewrites every hour from the first day with data onwards so the running sum stays continuous.
 """
 
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta, tzinfo
 from typing import TYPE_CHECKING, Any
 
@@ -48,11 +53,19 @@ from .data import get_config_value
 from .utils.units import as_float, convert_volume, normalized_unit
 
 if TYPE_CHECKING:
+    from collections.abc import Coroutine
+
     from homeassistant.core import HomeAssistant
 
     from .data import SensusAnalyticsConfigEntry
 
 BACKFILL_DAYS = 30
+# History import: pause between day requests, retries per day, and base retry backoff (seconds)
+HISTORY_REQUEST_DELAY = 0.5
+HISTORY_RETRIES = 3
+HISTORY_RETRY_DELAY = 2.0
+# Hours written per recorder job: keeps each database transaction short on multi-year imports
+IMPORT_CHUNK_SIZE = 31 * 24
 STATISTIC_NAME = "Sensus Analytics water usage"
 # Statistics keep more precision than the rounded sensor states (0.000001 CCF is about 0.0001 CF)
 VALUE_PRECISION = 6
@@ -118,6 +131,20 @@ def hourly_usage(
     return usage_by_hour
 
 
+class SensusAnalyticsHistoryImportError(Exception):
+    """A history import could not fetch every day, so nothing was written."""
+
+
+@dataclass(frozen=True, slots=True)
+class SensusAnalyticsHistoryImportResult:
+    """The outcome of a history import."""
+
+    # First local day with hourly data, or None when Sensus had none for the whole range
+    first_day: date | None
+    # Local days written, from the first day with data through the last day imported
+    days: int
+
+
 def _local_day_start(day: date, local_tz: tzinfo) -> datetime:
     """Return the start of a local day as an aware UTC datetime."""
     return dt_util.as_utc(datetime.combine(day, time.min, tzinfo=local_tz))
@@ -132,6 +159,7 @@ class SensusAnalyticsStatisticsImporter:
         self._entry = entry
         self._lock = asyncio.Lock()
         self._task: asyncio.Task[None] | None = None
+        self._history_task: asyncio.Task[None] | None = None
         # The previous day's data as of the last complete import
         self._fingerprint: tuple[Any, ...] | None = None
         self._unknown_unit_logged = False
@@ -146,6 +174,16 @@ class SensusAnalyticsStatisticsImporter:
     def _local_tz(self) -> tzinfo:
         """Return Home Assistant's configured time zone."""
         return dt_util.get_time_zone(self._hass.config.time_zone) or dt_util.DEFAULT_TIME_ZONE
+
+    @property
+    def statistic_name(self) -> str:
+        """Return the statistic name shown in the Energy dashboard."""
+        return self._name
+
+    @property
+    def history_import_running(self) -> bool:
+        """Return whether a history import is in progress."""
+        return self._history_task is not None and not self._history_task.done()
 
     @property
     def _name(self) -> str:
@@ -172,6 +210,25 @@ class SensusAnalyticsStatisticsImporter:
         """Import any new or corrected hourly usage; runs never overlap."""
         async with self._lock:
             await self._async_import()
+
+    @callback
+    def async_start_history_import(self, target: Coroutine[Any, Any, None]) -> None:
+        """Run a history import (wrapped by the caller for reporting) as a background task."""
+        self._history_task = self._entry.async_create_background_task(
+            self._hass,
+            target,
+            f"{DOMAIN} history import {self._entry.entry_id}",
+        )
+
+    async def async_import_history(self, start_date: date) -> SensusAnalyticsHistoryImportResult:
+        """Import hourly usage from start_date through yesterday.
+
+        Holds the import lock for the whole run, so a regular import triggered meanwhile waits
+        for it and then only picks up anything newer. Raises SensusAnalyticsHistoryImportError,
+        without writing anything, when any day can't be fetched.
+        """
+        async with self._lock:
+            return await self._async_import_history(start_date)
 
     async def async_get_last_imported_hour(self) -> datetime | None:
         """Return the start of the last imported hour, if any."""
@@ -285,6 +342,130 @@ class SensusAnalyticsStatisticsImporter:
                 return usage, False
             usage.update(day_usage)
         return usage, True
+
+    async def _async_import_history(self, start_date: date) -> SensusAnalyticsHistoryImportResult:
+        """Import history (called with the lock held)."""
+        local_tz = self._local_tz
+        coordinator_data = self._entry.runtime_data.coordinator.data or {}
+        fallback_unit = coordinator_data.get("usageUnit")
+        yesterday = hourly_usage(coordinator_data.get("hourly_usage_data") or [], self.unit, fallback_unit)
+        if yesterday is None:
+            self._warn_unknown_unit()
+            raise SensusAnalyticsHistoryImportError("the Sensus usage unit is not supported")
+
+        # The newest day comes from the coordinator, like the regular import. Without it, the
+        # previous day may not be published yet (or only partly), so stop the day before and
+        # leave it to the regular import once the coordinator has it.
+        if yesterday:
+            data_day: date | None = min(yesterday).astimezone(local_tz).date()
+            last_day = data_day
+            last_fetch_day = data_day - timedelta(days=1)
+        else:
+            data_day = None
+            last_day = last_fetch_day = dt_util.now(local_tz).date() - timedelta(days=2)
+
+        days = [start_date + timedelta(days=offset) for offset in range((last_fetch_day - start_date).days + 1)]
+        usage_by_day = await self._async_fetch_history(days, fallback_unit)
+        use_coordinator_day = data_day is not None and data_day >= start_date
+        if use_coordinator_day:
+            usage_by_day.append((last_day, yesterday))
+
+        # Skip leading days without data, so nothing is written before the first real hour
+        first_day = next((day for day, day_usage in usage_by_day if day_usage), None)
+        if first_day is None:
+            LOGGER.debug("Sensus had no hourly usage for %s since %s", self.statistic_id, start_date)
+            return SensusAnalyticsHistoryImportResult(first_day=None, days=0)
+        usage: HourlyUsage = {}
+        for day, day_usage in usage_by_day:
+            if day >= first_day:
+                usage.update(day_usage)
+
+        await self._async_write_history(usage)
+        if use_coordinator_day:
+            # The next regular run skips this data but still imports later corrections
+            self._fingerprint = (self.statistic_id, tuple(sorted(yesterday.items())))
+        return SensusAnalyticsHistoryImportResult(first_day=first_day, days=(last_day - first_day).days + 1)
+
+    async def _async_fetch_history(self, days: list[date], fallback_unit: Any) -> list[tuple[date, HourlyUsage]]:
+        """Fetch every day, one request at a time, retrying each day before giving up."""
+        usage_by_day: list[tuple[date, HourlyUsage]] = []
+        for index, day in enumerate(days):
+            if index:
+                await asyncio.sleep(HISTORY_REQUEST_DELAY)
+            # Log in once at the start; retries log in again in case the session expired
+            entries = await self._async_fetch_history_day(day, authenticate=index == 0)
+            day_usage = hourly_usage(entries, self.unit, fallback_unit)
+            if day_usage is None:
+                self._warn_unknown_unit()
+                raise SensusAnalyticsHistoryImportError("the Sensus usage unit is not supported")
+            usage_by_day.append((day, day_usage))
+        return usage_by_day
+
+    async def _async_fetch_history_day(self, day: date, *, authenticate: bool) -> list[dict[str, Any]]:
+        """Fetch one day, retrying with a growing delay and a fresh login."""
+        client = self._entry.runtime_data.client
+        attempt = 0
+        while True:
+            try:
+                return await client.async_get_hourly_data(
+                    account_number=self._entry.data[CONF_ACCOUNT_NUMBER],
+                    meter_number=self._entry.data[CONF_METER_NUMBER],
+                    target_date=datetime.combine(day, time(12), tzinfo=self._local_tz),
+                    authenticate=authenticate or attempt > 0,
+                )
+            except SensusAnalyticsApiClientError as exception:
+                if attempt >= HISTORY_RETRIES:
+                    raise SensusAnalyticsHistoryImportError(
+                        f"failed to fetch hourly data for {day.isoformat()}: {exception}",
+                    ) from exception
+                LOGGER.debug("Retrying Sensus hourly data for %s: %s", day.isoformat(), exception)
+                await asyncio.sleep(HISTORY_RETRY_DELAY * 2**attempt)
+                attempt += 1
+
+    async def _async_write_history(self, usage: HourlyUsage) -> None:
+        """Rewrite every hour from the first imported hour onwards with a continuous running sum.
+
+        Hours already in the statistic after that point (for example from the regular import)
+        keep their values but get their sums rebuilt, so the sum never jumps.
+        """
+        recorder = get_instance(self._hass)
+        # Let any queued import finish so the sums read below are current
+        await recorder.async_block_till_done()
+        first_hour = min(usage)
+        last_start, last_sum = await self._async_last_statistic()
+        running_sum = await self._async_sum_before(first_hour, last_start, last_sum)
+
+        stats = await recorder.async_add_executor_job(
+            statistics_during_period,
+            self._hass,
+            first_hour,
+            None,
+            {self.statistic_id},
+            "hour",
+            None,
+            {"state"},
+        )
+        merged: HourlyUsage = {
+            dt_util.utc_from_timestamp(start): float(row.get("state") or 0)
+            for row in stats.get(self.statistic_id, [])
+            if (start := row.get("start")) is not None
+        }
+        merged.update(usage)
+
+        statistics: list[StatisticData] = []
+        for start in sorted(merged):
+            running_sum += merged[start]
+            statistics.append(StatisticData(start=start, state=merged[start], sum=round(running_sum, VALUE_PRECISION)))
+
+        LOGGER.debug("Adding %s hourly statistics for %s from %s", len(statistics), self.statistic_id, first_hour)
+        # The recorder runs its jobs in order, and every sum is already final, so chunks stay consistent
+        for index in range(0, len(statistics), IMPORT_CHUNK_SIZE):
+            async_add_external_statistics(
+                self._hass,
+                build_metadata(self.statistic_id, self.unit, self._name),
+                statistics[index : index + IMPORT_CHUNK_SIZE],
+            )
+        await recorder.async_block_till_done()
 
     def _warn_unknown_unit(self) -> None:
         """Log once that the Sensus usage unit can't be converted to the display unit."""

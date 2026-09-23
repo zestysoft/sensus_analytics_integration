@@ -76,6 +76,16 @@ Refresh all loaded Sensus Analytics entries immediately. This does not make new 
 action: sensus_analytics.reload_data
 ```
 
+### `sensus_analytics.import_history`
+
+Import older hourly water usage into the **Sensus Analytics water usage** statistic, from a start date (up to 3 years ago) through yesterday. It runs in the background, makes one Sensus request per day, and shows a notification with the number of days imported and the first day Sensus had data for. It is safe to run again, and if any day can't be downloaded nothing is changed. Add `config_entry_id` to import only one meter; otherwise every loaded meter is imported. See [Importing older history](../../README.md#importing-older-history) in the README.
+
+```yaml
+action: sensus_analytics.import_history
+data:
+  start_date: "2025-09-01"
+```
+
 ## Diagnostics
 
 Diagnostics include config entry metadata, latest coordinator data, and the unit and last imported hour of the water usage statistic. Sensitive values are redacted:

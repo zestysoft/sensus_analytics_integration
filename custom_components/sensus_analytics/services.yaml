@@ -1,3 +1,21 @@
 reload_data:
   name: Reload data
   description: "Fetches the latest data from Sensus Analytics for all configured meters."
+import_history:
+  name: Import history
+  description: "Imports older hourly water usage from Sensus Analytics into the Energy dashboard statistic. Runs in the background, one request per day, and shows a notification when it finishes."
+  fields:
+    start_date:
+      name: Start date
+      description: "First day to import, up to 3 years ago. Days where Sensus Analytics has no hourly data are skipped."
+      required: true
+      example: "2025-09-01"
+      selector:
+        date:
+    config_entry_id:
+      name: Meter
+      description: "The Sensus Analytics entry to import. Leave empty to import every configured meter."
+      required: false
+      selector:
+        config_entry:
+          integration: sensus_analytics
