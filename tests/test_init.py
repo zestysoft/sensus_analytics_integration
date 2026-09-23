@@ -29,6 +29,7 @@ from custom_components.sensus_analytics.const import (
     UNIT_GALLONS,
 )
 from homeassistant import config_entries
+from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -53,8 +54,8 @@ ENTRY_DATA = {
 
 
 @pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
-    """Allow Home Assistant to load the integration under test."""
+def auto_enable_custom_integrations(recorder_mock: Recorder, enable_custom_integrations: None) -> None:
+    """Allow Home Assistant to load the integration under test (the recorder is a dependency)."""
 
 
 def _daily_data(hourly: list[dict[str, Any]] | None = None) -> dict[str, Any]:

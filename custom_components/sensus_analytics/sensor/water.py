@@ -25,14 +25,15 @@ from custom_components.sensus_analytics.const import (
 from custom_components.sensus_analytics.coordinator import SensusAnalyticsDataUpdateCoordinator
 from custom_components.sensus_analytics.data import get_config_value
 from custom_components.sensus_analytics.entity import SensusAnalyticsEntity
+from custom_components.sensus_analytics.utils.units import (
+    as_float as _as_float,
+    convert_volume,
+    normalized_unit as _normalized_unit,
+)
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription, SensorStateClass
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import dt as dt_util
-
-CF_TO_GALLON = 7.48052
-CF_PER_CCF = 100
-GALLONS_PER_CCF = CF_TO_GALLON * CF_PER_CCF
 
 ValueFn = Callable[[SensusAnalyticsDataUpdateCoordinator], Any]
 UnitFn = Callable[[SensusAnalyticsDataUpdateCoordinator], str | None]
@@ -55,30 +56,6 @@ class SensusAnalyticsSensorEntityDescription(SensorEntityDescription):
 def _data(coordinator: SensusAnalyticsDataUpdateCoordinator) -> dict[str, Any]:
     """Return coordinator data as a dictionary."""
     return coordinator.data or {}
-
-
-def _as_float(value: Any) -> float | None:
-    """Convert a value to float when possible."""
-    if value in (None, ""):
-        return None
-    try:
-        return float(value)
-    except TypeError, ValueError:
-        return None
-
-
-def _normalized_unit(unit: Any) -> str | None:
-    """Normalize Sensus usage unit names."""
-    if unit is None:
-        return None
-    unit_str = str(unit).strip().upper()
-    if unit_str in {"GAL", "GALLON", "GALLONS", "G"}:
-        return UNIT_GALLONS
-    if unit_str == UNIT_CCF:
-        return UNIT_CCF
-    if unit_str == "CF":
-        return "CF"
-    return unit_str
 
 
 def _api_usage_unit(coordinator: SensusAnalyticsDataUpdateCoordinator) -> str | None:
@@ -108,18 +85,12 @@ def _convert_usage(
     source = _normalized_unit(source_unit) or _api_usage_unit(coordinator)
     target = target_unit or _configured_usage_unit(coordinator)
 
-    if source == target:
+    converted = convert_volume(usage_float, source, target)
+    if source == target or converted is None:
         return round(usage_float, 2)
-    if source == "CF" and target == UNIT_GALLONS:
-        return round(usage_float * CF_TO_GALLON)
-    if source == "CF" and target == UNIT_CCF:
-        return round(usage_float / CF_PER_CCF, 2)
-    if source == UNIT_GALLONS and target == UNIT_CCF:
-        return round(usage_float / GALLONS_PER_CCF, 2)
-    if source == UNIT_CCF and target == UNIT_GALLONS:
-        return round(usage_float * GALLONS_PER_CCF)
-
-    return round(usage_float, 2)
+    if target == UNIT_GALLONS:
+        return round(converted)
+    return round(converted, 2)
 
 
 def _usage_unit(coordinator: SensusAnalyticsDataUpdateCoordinator) -> str:

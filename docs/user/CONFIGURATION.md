@@ -46,6 +46,8 @@ Use **Settings** -> **Devices & Services** -> **Sensus Analytics** -> **Configur
 
 Tier 1 Price, Service Fee, Unit Type, and Update Interval are required. Blank tier limit or price fields are treated as zero.
 
+Changing Unit Type starts a new **Sensus Analytics water usage** statistic in the new unit (backfilled for 30 days). Select it again under **Settings** -> **Dashboards** -> **Energy** -> **Water consumption**. See [Energy Dashboard](../../README.md#energy-dashboard) in the README.
+
 ## Reconfiguration
 
 Use **Reconfigure** when changing connection settings:
@@ -62,7 +64,7 @@ Reconfigure does not change the display unit or pricing. Use **Configure** (the 
 
 ## When Data Shows Up
 
-Sensus Analytics releases each day's readings at about local midnight, so a day's water appears in Home Assistant at the start of the next day. See [When Does Data Show Up?](../../README.md#when-does-data-show-up) in the README for details.
+Sensus Analytics releases each day's readings at about local midnight, so a day's water appears in the sensors at the start of the next day. The **Sensus Analytics water usage** statistic used by the Energy dashboard is recorded at the hour the water was used, and late corrections replace the earlier numbers. See [When Does Data Show Up?](../../README.md#when-does-data-show-up) in the README for details.
 
 ## Actions
 
@@ -76,7 +78,7 @@ action: sensus_analytics.reload_data
 
 ## Diagnostics
 
-Diagnostics include config entry metadata and latest coordinator data. Sensitive values are redacted:
+Diagnostics include config entry metadata, latest coordinator data, and the unit and last imported hour of the water usage statistic. Sensitive values are redacted:
 
 - Base URL
 - Username

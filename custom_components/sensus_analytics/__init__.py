@@ -17,6 +17,7 @@ from .const import CONF_BASE_URL, CONF_UPDATE_INTERVAL_MINUTES, DEFAULT_UPDATE_I
 from .coordinator import SensusAnalyticsDataUpdateCoordinator
 from .data import SensusAnalyticsData, get_config_value
 from .service_actions import async_setup_services
+from .statistics import SensusAnalyticsStatisticsImporter
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -66,12 +67,18 @@ async def async_setup_entry(
         client=client,
         integration=async_get_loaded_integration(hass, entry.domain),
         coordinator=coordinator,
+        statistics=SensusAnalyticsStatisticsImporter(hass, entry),
     )
 
     await coordinator.async_config_entry_first_refresh()
 
     # No update listener: the options flow and the reauth/reconfigure flows each schedule a single reload
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Import hourly usage into long-term statistics after every successful refresh, starting with the first
+    statistics = entry.runtime_data.statistics
+    entry.async_on_unload(coordinator.async_add_listener(statistics.async_handle_coordinator_update))
+    statistics.async_handle_coordinator_update()
 
     return True
 
