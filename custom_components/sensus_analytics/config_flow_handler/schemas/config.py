@@ -48,28 +48,35 @@ def _number_key(key: str, defaults: Mapping[str, Any], *, required: bool, defaul
     return marker(key, default=configured_default)
 
 
+def _connection_fields(defaults: Mapping[str, Any]) -> dict[vol.Marker, Any]:
+    """Return the Sensus connection and meter fields."""
+    return {
+        vol.Required(
+            CONF_BASE_URL,
+            default=defaults.get(CONF_BASE_URL, vol.UNDEFINED),
+        ): _text_selector(),
+        vol.Required(
+            CONF_USERNAME,
+            default=defaults.get(CONF_USERNAME, vol.UNDEFINED),
+        ): _text_selector(),
+        vol.Required(CONF_PASSWORD): _text_selector(password=True),
+        vol.Required(
+            CONF_ACCOUNT_NUMBER,
+            default=defaults.get(CONF_ACCOUNT_NUMBER, vol.UNDEFINED),
+        ): _text_selector(),
+        vol.Required(
+            CONF_METER_NUMBER,
+            default=defaults.get(CONF_METER_NUMBER, vol.UNDEFINED),
+        ): _text_selector(),
+    }
+
+
 def get_user_schema(defaults: Mapping[str, Any] | None = None) -> vol.Schema:
     """Get schema for the initial setup step."""
     defaults = defaults or {}
     return vol.Schema(
         {
-            vol.Required(
-                CONF_BASE_URL,
-                default=defaults.get(CONF_BASE_URL, vol.UNDEFINED),
-            ): _text_selector(),
-            vol.Required(
-                CONF_USERNAME,
-                default=defaults.get(CONF_USERNAME, vol.UNDEFINED),
-            ): _text_selector(),
-            vol.Required(CONF_PASSWORD): _text_selector(password=True),
-            vol.Required(
-                CONF_ACCOUNT_NUMBER,
-                default=defaults.get(CONF_ACCOUNT_NUMBER, vol.UNDEFINED),
-            ): _text_selector(),
-            vol.Required(
-                CONF_METER_NUMBER,
-                default=defaults.get(CONF_METER_NUMBER, vol.UNDEFINED),
-            ): _text_selector(),
+            **_connection_fields(defaults),
             vol.Required(CONF_UNIT_TYPE, default=defaults.get(CONF_UNIT_TYPE, DEFAULT_UNIT_TYPE)): vol.In(
                 [UNIT_CCF, UNIT_GALLONS],
             ),
@@ -84,8 +91,12 @@ def get_user_schema(defaults: Mapping[str, Any] | None = None) -> vol.Schema:
 
 
 def get_reconfigure_schema(defaults: Mapping[str, Any]) -> vol.Schema:
-    """Get schema for reconfiguration."""
-    return get_user_schema(defaults)
+    """Get schema for reconfiguration.
+
+    Only connection settings are reconfigured here; display unit and pricing live in the options flow,
+    which takes precedence over config entry data.
+    """
+    return vol.Schema(_connection_fields(defaults))
 
 
 def get_reauth_schema(defaults: Mapping[str, Any]) -> vol.Schema:

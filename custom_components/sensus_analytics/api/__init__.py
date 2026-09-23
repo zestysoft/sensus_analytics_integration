@@ -8,8 +8,8 @@ Architecture:
 
 Exception hierarchy:
     SensusAnalyticsApiClientError (base)
-    ├── SensusAnalyticsApiClientCommunicationError (network/timeout)
-    └── SensusAnalyticsApiClientAuthenticationError (401/403)
+    ├── SensusAnalyticsApiClientCommunicationError (network/timeout/server error)
+    └── SensusAnalyticsApiClientAuthenticationError (rejected credentials)
 
 Coordinator exception mapping:
     ApiClientAuthenticationError → ConfigEntryAuthFailed (triggers reauth)

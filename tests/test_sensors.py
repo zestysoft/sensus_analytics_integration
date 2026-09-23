@@ -86,3 +86,15 @@ def test_daily_fee_applies_tiers_in_display_unit() -> None:
 
     # 300 CF displays as 3 CCF: 2 * 4.00 + 1 * 6.00
     assert _description("daily_fee").value_fn(coordinator) == 14.0
+
+
+def test_cost_sensors_reset_with_their_usage_counterparts() -> None:
+    """Cost sensors declare the same last_reset as the usage they are priced from."""
+    coordinator = _coordinator({"billingUsage": 100, "dailyUsage": 10, "usageUnit": "CF"}, {})
+
+    billing_cost_reset = _description("billing_cost").last_reset_fn
+    daily_fee_reset = _description("daily_fee").last_reset_fn
+    assert billing_cost_reset is not None
+    assert daily_fee_reset is not None
+    assert billing_cost_reset(coordinator) == _description("billing_usage").last_reset_fn(coordinator)
+    assert daily_fee_reset(coordinator) == _description("daily_usage").last_reset_fn(coordinator)
