@@ -4,7 +4,7 @@
   "description": "Development tools for the Home Assistant integration",
   "private": true,
   "devDependencies": {
-    "@github/copilot": "1.0.88",
+    "@github/copilot": "1.0.91",
     "markdownlint-cli2": "0.23.3",
     "prettier": "3.9.9",
     "pyright": "1.1.414"
