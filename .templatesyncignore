@@ -25,6 +25,13 @@ pyproject.toml
 .yamllint.yml
 .pre-commit-config.yaml
 
+# ── Ignore pattern files ───────────────────────────────────────
+# .gitignore and .prettierignore contain a domain-specific negation pattern
+# (!custom_components/<your_domain>/) set by initialize.sh that cannot be
+# expressed as a generic placeholder. Syncing would revert that line.
+.gitignore
+.prettierignore
+
 # ── Runtime dependencies ──────────────────────────────────────
 # requirements.txt lists your integration's PyPI dependencies (synced with
 # manifest.json → requirements). This is user-owned content; requirements_dev.txt
@@ -48,19 +55,43 @@ CONTRIBUTING.md
 DEPENDENCIES.md
 
 # ── AI agent instruction files ───────────────────────────────
-# These contain domain-specific references (ha_integration_domain,
-# Integration Blueprint, etc.) that were replaced during init.
-# Maintain these yourself to reflect your integration's patterns.
+# Project-identity files are customized during initialization and must not be
+# overwritten by template sync (they contain your domain, class prefix, repo
+# URL, etc.). The path-specific *.instructions.md files under .agents/instructions/
+# use generic placeholders and ARE safely synced from the template.
 AGENTS.md
 CLAUDE.md
-GEMINI.md
-.github/copilot-instructions.md
+
+# ── Agent skills ─────────────────────────────────────────────
+# Skills under .agents/skills/ use generic placeholders and ARE safely synced,
+# so you keep receiving blueprint improvements.
+#
+# This one is only meaningful inside the blueprint repository itself.
+# initialize.sh deletes it; this entry stops the sync from reinstating it.
+.agents/skills/blueprint-skill-maintenance/
+#
+# Skills YOU add are never touched — template sync only overwrites files that
+# changed upstream, and a directory the blueprint does not have is not one of
+# them. No entry needed.
+#
+# To take ownership of a blueprint skill (your edits win, and you keep it
+# current yourself), or to switch one off, uncomment and adjust:
+#
+# .agents/skills/ha-testing/
+# .agents/skills/ha-release/
+#
+# See .agents/skills/README.md → "Customizing in your own repository".
+
+# ── Project governance ────────────────────────────────────────
+# Shipped once with the blueprint, then owned by the integration maintainer.
+# Template sync must not silently change contribution or AI policies.
+AI_POLICY.md
+.github/pull_request_template.md
 
 # ── GitHub project settings ──────────────────────────────────
 # Ownership, funding, and other per-project settings
 .github/CODEOWNERS
 .github/FUNDING.yml
-.github/COPILOT_CODING_AGENT.md
 
 # ── Script and DevContainer hooks ────────────────────────────
 # Your custom pre/post hooks live here — never overwritten by template sync
@@ -85,6 +116,11 @@ config/
 # Docs are written for your specific integration
 docs/
 
+# ── Template sync ignore list ────────────────────────────────
+# This file itself is excluded so your additions are never overwritten by sync.
+# The runtime copy (.templatesyncignore.runtime) is gitignored and ephemeral.
+.templatesyncignore
+
 # ── This sync workflow ───────────────────────────────────────
 # Keep this file in your control — customize the schedule,
 # add PAT secrets, or adjust PR settings as you see fit.
@@ -94,3 +130,8 @@ docs/
 # Manage your own lockfile to avoid noisy, conflict-prone PRs.
 # Run `uv lock` manually after updating requirements*.txt.
 uv.lock
+
+# ── GitHub Issue Templates ───────────────────────────────────
+# Issue templates are shipped once with the blueprint and then
+# maintained per-project. They don't need to be kept in sync.
+.github/ISSUE_TEMPLATE/

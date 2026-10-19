@@ -8,15 +8,6 @@ updates:
       day: "monday"
     commit-message:
       prefix: "chore(deps)"
-    cooldown:
-      default-days: 7
-    groups:
-      # Security fixes get their own group so the auto-merge workflow can tell them apart
-      # and leave them for manual review
-      security-updates:
-        applies-to: security-updates
-        patterns:
-          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -35,10 +26,6 @@ updates:
         update-types:
           - minor
           - patch
-      security-updates:
-        applies-to: security-updates
-        patterns:
-          - "*"
 
   - package-ecosystem: "pip"
     directory: "/"
@@ -50,16 +37,19 @@ updates:
     ignore:
       # homeassistant is a transitive dependency pulled in by pytest-homeassistant-custom-component.
       # Its version must stay in sync with the "homeassistant" key in hacs.json — update that manually
-      # when bumping pytest-homeassistant-custom-component (see below).
+      # when bumping pytest-homeassistant-custom-component manually.
       - dependency-name: "homeassistant"
-    # Let new releases settle for 7 days before opening a PR
+      # pytest-homeassistant-custom-component releases track Home Assistant closely.
+      # Keep this pinned and bump it manually together with hacs.json "homeassistant".
+      - dependency-name: "pytest-homeassistant-custom-component"
+    # Let patch releases settle 3 days, minor releases 7 days before opening a PR
     cooldown:
-      default-days: 7
+      semver-patch-days: 3
+      semver-minor-days: 7
     groups:
       # Bundle all minor/patch Python dep updates into a single PR; major updates stay separate.
-      # pytest-homeassistant-custom-component is intentionally excluded: it tracks HA Core releases
-      # (patch = new HA version) and always gets its own PR so the coupling to hacs.json is visible.
-      # When merging its PR, also update the "homeassistant" key in hacs.json accordingly.
+      # pytest-homeassistant-custom-component is intentionally excluded and ignored above,
+      # because it is updated manually together with hacs.json "homeassistant".
       python-dependencies:
         applies-to: version-updates
         update-types:
@@ -67,27 +57,3 @@ updates:
           - patch
         exclude-patterns:
           - "pytest-homeassistant-custom-component"
-      security-updates:
-        applies-to: security-updates
-        patterns:
-          - "*"
-
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps)"
-    cooldown:
-      default-days: 7
-    groups:
-      npm-dependencies:
-        applies-to: version-updates
-        update-types:
-          - minor
-          - patch
-      security-updates:
-        applies-to: security-updates
-        patterns:
-          - "*"
