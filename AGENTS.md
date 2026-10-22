@@ -252,8 +252,7 @@ This integration uses the following identifiers consistently:
 **For detailed patterns, see:**
 
 - `.github/instructions/blueprint.entities.instructions.md` - Entity platform patterns
-- `.github/instructions/blueprint.coordinator.instructions.md` - Coordinator implementation
-- `.github/instructions/blueprint.api.instructions.md` - API client patterns
+- `.github/instructions/blueprint.coordinator.instructions.md` - Coordinator and API client patterns
 
 ### Device Info
 
@@ -349,7 +348,7 @@ See `.github/instructions/blueprint.service_actions.instructions.md` for service
 - Raise `ConfigEntryAuthFailed` (triggers reauth) or `UpdateFailed` (retry)
 - Use `async_config_entry_first_refresh()` for first update
 
-See `.github/instructions/blueprint.coordinator.instructions.md` and `.github/instructions/blueprint.api.instructions.md` for details.
+See `.github/instructions/blueprint.coordinator.instructions.md` for details.
 
 **Entities:**
 

@@ -30,7 +30,6 @@ Consult the relevant instruction file when working on specific file types:
 - `blueprint.python.instructions.md` — Python style, async patterns, HA imports
 - `blueprint.entities.instructions.md` — Entity platform patterns, inheritance
 - `blueprint.config_flow.instructions.md` — Config flow, reauth, discovery
-- `blueprint.coordinator.instructions.md` — DataUpdateCoordinator patterns
-- `blueprint.api.instructions.md` — API client, exception hierarchy
+- `blueprint.coordinator.instructions.md` — DataUpdateCoordinator and API client patterns, exception hierarchy
 - `blueprint.services_yaml.instructions.md` — Service action definitions
 - `blueprint.translations.instructions.md` — Translation file structure
