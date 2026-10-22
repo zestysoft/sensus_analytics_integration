@@ -21,7 +21,7 @@ source "$SCRIPT_DIR/.lib/output.sh"
 
 NPM_BIN="./node_modules/.bin"
 if [[ ! -x "$NPM_BIN/prettier" || ! -x "$NPM_BIN/markdownlint-cli2" ]]; then
-    die "Node.js dependencies not installed. Run: npm install"
+    die "Node.js dependencies not installed. Run: npm ci"
 fi
 
 run_hook "markdown-check" "pre"
