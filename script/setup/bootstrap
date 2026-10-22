@@ -174,24 +174,6 @@ EOF
     set -e
 fi
 
-log_header "Installing development dependencies"
-uv pip install --requirement requirements_dev.txt
-
-log_header "Installing test dependencies"
-uv pip install --requirement requirements_test.txt
-
-log_header "Installing runtime dependencies"
-if [[ -s requirements.txt ]] && grep -qv '^#' requirements.txt | grep -q '[^[:space:]]'; then
-    uv pip install --requirement requirements.txt
-else
-    log_info "No runtime dependencies defined (this is normal for blueprints)"
-fi
-
-if [[ -f requirements.local.txt ]]; then
-    log_header "Installing local extra dependencies (requirements.local.txt)"
-    uv pip install --requirement requirements.local.txt
-fi
-
 if [[ -n "${HA_VERSION:-}" ]]; then
     # Explicit HA_VERSION from environment — use exactly as specified
     resolve_ha_version HA_VERSION "$HA_VERSION"
@@ -220,13 +202,44 @@ if [[ -f "$HA_VERSION_MARKER" ]]; then
     CACHED_HA_VERSION=$(cat "$HA_VERSION_MARKER")
     if [[ "$CACHED_HA_VERSION" != "$HA_VERSION" ]]; then
         log_warning "HA version changed ($CACHED_HA_VERSION → $HA_VERSION) — recreating virtual environment"
+        # Leave the environment before deleting it. Otherwise Bash may keep the
+        # venv's uv executable cached and try to run it after it has been removed.
+        if declare -F deactivate >/dev/null 2>&1; then
+            deactivate
+        fi
         # Use find instead of rm -rf: the path may be a named Docker volume mount point
         # which cannot be removed itself — only its contents can be deleted.
         find "$VENV_PATH" -mindepth 1 -delete
+        hash -r
+        # uv may previously have existed only inside the removed venv (for
+        # example when bootstrap was started from an activated local venv).
+        if ! command -v uv >/dev/null 2>&1; then
+            log_info "UV not found outside the removed venv, installing..."
+            pipx install uv
+            hash -r
+        fi
         uv venv "$VENV_PATH"
         # shellcheck source=/dev/null
         source "$VENV_PATH/bin/activate"
     fi
+fi
+
+log_header "Installing development dependencies"
+uv pip install --requirement requirements_dev.txt
+
+log_header "Installing test dependencies"
+uv pip install --requirement requirements_test.txt
+
+log_header "Installing runtime dependencies"
+if [[ -s requirements.txt ]] && grep -qv '^#' requirements.txt | grep -q '[^[:space:]]'; then
+    uv pip install --requirement requirements.txt
+else
+    log_info "No runtime dependencies defined (this is normal for blueprints)"
+fi
+
+if [[ -f requirements.local.txt ]]; then
+    log_header "Installing local extra dependencies (requirements.local.txt)"
+    uv pip install --requirement requirements.local.txt
 fi
 
 log_header "Installing Home Assistant ${HA_VERSION} runtime dependencies"
