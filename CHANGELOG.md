@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/zestysoft/sensus_analytics_integration/compare/v1.10.1...v2.0.0) (2026-10-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* Home Assistant 2026.10.0 or newer is now required.
+
+### Features
+
+* require Home Assistant 2026.10 ([#135](https://github.com/zestysoft/sensus_analytics_integration/issues/135)) ([f2cc886](https://github.com/zestysoft/sensus_analytics_integration/commit/f2cc886a15878674edc8b8a9c6b808736376b523))
+
 ## [1.10.1](https://github.com/zestysoft/sensus_analytics_integration/compare/v1.10.0...v1.10.1) (2026-09-23)
 
 
