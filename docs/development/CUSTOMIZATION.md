@@ -257,7 +257,7 @@ The devcontainer setup can be customized through environment variable files with
 Values in `.env.local` always win over `.env`. Both files use standard shell variable syntax:
 
 ```bash
-HA_VERSION=2026.4
+HA_VERSION=2026.10
 HA_INSTALL_HACS=1
 APT_UPDATE=0
 ```

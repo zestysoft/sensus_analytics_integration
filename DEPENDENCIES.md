@@ -112,7 +112,7 @@ The `script/setup/bootstrap` automatically installs dependencies from multiple s
 
 ### From Home Assistant Core
 
-**Version:** Read from the `homeassistant` minimum in `hacs.json` (currently `2026.4.0`, resolved to the latest `2026.4.x` patch). Set `HA_VERSION` in `.devcontainer/.env` or `.devcontainer/.env.local` to override it.
+**Version:** Read from the `homeassistant` minimum in `hacs.json` (currently `2026.10.0`, resolved to the latest `2026.10.x` patch). Set `HA_VERSION` in `.devcontainer/.env` or `.devcontainer/.env.local` to override it.
 
 1. **Runtime dependencies** (`requirements_all.txt`)
    - All packages that Home Assistant integrations might need
@@ -147,7 +147,7 @@ This approach means this project only needs to maintain a minimal set of depende
 ```json
 {
   "name": "Sensus Analytics Integration",
-  "homeassistant": "2026.4.0",
+  "homeassistant": "2026.10.0",
   "hacs": "2.0.5"
 }
 ```

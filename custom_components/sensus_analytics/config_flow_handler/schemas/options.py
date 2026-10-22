@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from custom_components.sensus_analytics.const import (
     CONF_SERVICE_FEE,
@@ -25,24 +25,26 @@ from custom_components.sensus_analytics.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-_NON_NEGATIVE_FLOAT = vol.All(vol.Coerce(float), vol.Range(min=0))
+_NON_NEGATIVE_FLOAT = probatio.All(probatio.Coerce(float), probatio.Range(min=0))
 
 
-def _number_key(key: str, defaults: Mapping[str, Any], *, required: bool, default: float | None = None) -> vol.Marker:
+def _number_key(
+    key: str, defaults: Mapping[str, Any], *, required: bool, default: float | None = None
+) -> probatio.Marker:
     """Return a marker for an option number."""
     configured_default = defaults.get(key, default)
-    marker = vol.Required if required else vol.Optional
+    marker = probatio.Required if required else probatio.Optional
     if configured_default is None:
         return marker(key)
     return marker(key, default=configured_default)
 
 
-def get_options_schema(defaults: Mapping[str, Any] | None = None) -> vol.Schema:
+def get_options_schema(defaults: Mapping[str, Any] | None = None) -> probatio.Schema:
     """Get schema for options flow."""
     defaults = defaults or {}
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_UNIT_TYPE, default=defaults.get(CONF_UNIT_TYPE, DEFAULT_UNIT_TYPE)): vol.In(
+            probatio.Required(CONF_UNIT_TYPE, default=defaults.get(CONF_UNIT_TYPE, DEFAULT_UNIT_TYPE)): probatio.In(
                 [UNIT_CCF, UNIT_GALLONS],
             ),
             _number_key(CONF_TIER1_GALLONS, defaults, required=False): _NON_NEGATIVE_FLOAT,
@@ -51,10 +53,10 @@ def get_options_schema(defaults: Mapping[str, Any] | None = None) -> vol.Schema:
             _number_key(CONF_TIER2_PRICE, defaults, required=False): _NON_NEGATIVE_FLOAT,
             _number_key(CONF_TIER3_PRICE, defaults, required=False): _NON_NEGATIVE_FLOAT,
             _number_key(CONF_SERVICE_FEE, defaults, required=True, default=DEFAULT_SERVICE_FEE): _NON_NEGATIVE_FLOAT,
-            vol.Required(
+            probatio.Required(
                 CONF_UPDATE_INTERVAL_MINUTES,
                 default=defaults.get(CONF_UPDATE_INTERVAL_MINUTES, DEFAULT_UPDATE_INTERVAL_MINUTES),
-            ): vol.All(cv.positive_int, vol.Range(min=1, max=1440)),
+            ): probatio.All(cv.positive_int, probatio.Range(min=1, max=1440)),
         },
     )
 
