@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from custom_components.sensus_analytics.const import ATTR_START_DATE, DOMAIN, HISTORY_IMPORT_MAX_YEARS, LOGGER
 from custom_components.sensus_analytics.statistics import SensusAnalyticsHistoryImportError
@@ -24,10 +24,10 @@ if TYPE_CHECKING:
     from custom_components.sensus_analytics.data import SensusAnalyticsConfigEntry
     from homeassistant.core import HomeAssistant, ServiceCall
 
-IMPORT_HISTORY_SCHEMA = vol.Schema(
+IMPORT_HISTORY_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_START_DATE): cv.date,
-        vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_START_DATE): cv.date,
+        probatio.Optional(ATTR_CONFIG_ENTRY_ID): cv.string,
     },
 )
 NOTIFICATION_TITLE = "Sensus Analytics history import"
