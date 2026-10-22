@@ -1,0 +1,48 @@
+{
+  "entity": {
+    "sensor": {
+      "daily_usage": {
+        "default": "mdi:water"
+      },
+      "meter_address": {
+        "default": "mdi:map-marker"
+      },
+      "last_read": {
+        "default": "mdi:clock-time-nine"
+      },
+      "meter_longitude": {
+        "default": "mdi:longitude"
+      },
+      "meter_id": {
+        "default": "mdi:account"
+      },
+      "meter_latitude": {
+        "default": "mdi:latitude"
+      },
+      "meter_odometer": {
+        "default": "mdi:water"
+      },
+      "billing_usage": {
+        "default": "mdi:water"
+      },
+      "billing_cost": {
+        "default": "mdi:currency-usd"
+      },
+      "daily_fee": {
+        "default": "mdi:currency-usd"
+      },
+      "last_hour_usage": {
+        "default": "mdi:water"
+      },
+      "last_hour_rainfall": {
+        "default": "mdi:weather-rainy"
+      },
+      "last_hour_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "last_hour_timestamp": {
+        "default": "mdi:clock-time-nine"
+      }
+    }
+  }
+}
