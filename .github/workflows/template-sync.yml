@@ -20,16 +20,23 @@ on:
     - cron: "0 7 * * 1"
   workflow_dispatch:
 
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   template-sync:
+    name: Sync from template
     # Skip when running inside the template repository itself
     if: github.repository != 'jpawlowski/hacs.integration_blueprint'
     runs-on: ubuntu-latest
     env:
       TEMPLATE_SYNC_TARGET_PAT: ${{ secrets.TEMPLATE_SYNC_TARGET_PAT }}
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write # push the sync branch
+      pull-requests: write # open the sync pull request
 
     steps:
       - name: Checkout

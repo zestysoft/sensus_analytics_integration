@@ -4,14 +4,19 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   automerge:
     name: Enable auto-merge
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # let auto-merge merge the pull request
+      pull-requests: write # turn on auto-merge for the pull request
     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.event.pull_request.draft == false
     steps:
       - name: Fetch Dependabot metadata
