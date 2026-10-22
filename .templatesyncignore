@@ -103,6 +103,11 @@ script/hooks/
 # Both are user-owned; upstream changes would silently revert your pin or docs.
 .devcontainer/.env
 
+# ── Issue templates ──────────────────────────────────────────
+# Duplicate-check links point at this repository's issues; the template's
+# copies point at the blueprint's issues instead.
+.github/ISSUE_TEMPLATE/
+
 # ── Dependabot config ────────────────────────────────────────
 # Customized here: security-updates groups (used by dependabot-auto-merge.yml
 # to hold security fixes for manual review) and cooldowns on every ecosystem.
