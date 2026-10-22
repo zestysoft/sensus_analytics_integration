@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from custom_components.sensus_analytics.const import (
     CONF_ACCOUNT_NUMBER,
@@ -27,7 +27,7 @@ from custom_components.sensus_analytics.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
 
-_NON_NEGATIVE_FLOAT = vol.All(vol.Coerce(float), vol.Range(min=0))
+_NON_NEGATIVE_FLOAT = probatio.All(probatio.Coerce(float), probatio.Range(min=0))
 
 
 def _text_selector(password: bool = False) -> selector.TextSelector:
@@ -39,45 +39,47 @@ def _text_selector(password: bool = False) -> selector.TextSelector:
     )
 
 
-def _number_key(key: str, defaults: Mapping[str, Any], *, required: bool, default: float | None = None) -> vol.Marker:
-    """Return a voluptuous marker for a numeric field."""
+def _number_key(
+    key: str, defaults: Mapping[str, Any], *, required: bool, default: float | None = None
+) -> probatio.Marker:
+    """Return a probatio marker for a numeric field."""
     configured_default = defaults.get(key, default)
-    marker = vol.Required if required else vol.Optional
+    marker = probatio.Required if required else probatio.Optional
     if configured_default is None:
         return marker(key)
     return marker(key, default=configured_default)
 
 
-def _connection_fields(defaults: Mapping[str, Any]) -> dict[vol.Marker, Any]:
+def _connection_fields(defaults: Mapping[str, Any]) -> dict[probatio.Marker, Any]:
     """Return the Sensus connection and meter fields."""
     return {
-        vol.Required(
+        probatio.Required(
             CONF_BASE_URL,
-            default=defaults.get(CONF_BASE_URL, vol.UNDEFINED),
+            default=defaults.get(CONF_BASE_URL, probatio.UNDEFINED),
         ): _text_selector(),
-        vol.Required(
+        probatio.Required(
             CONF_USERNAME,
-            default=defaults.get(CONF_USERNAME, vol.UNDEFINED),
+            default=defaults.get(CONF_USERNAME, probatio.UNDEFINED),
         ): _text_selector(),
-        vol.Required(CONF_PASSWORD): _text_selector(password=True),
-        vol.Required(
+        probatio.Required(CONF_PASSWORD): _text_selector(password=True),
+        probatio.Required(
             CONF_ACCOUNT_NUMBER,
-            default=defaults.get(CONF_ACCOUNT_NUMBER, vol.UNDEFINED),
+            default=defaults.get(CONF_ACCOUNT_NUMBER, probatio.UNDEFINED),
         ): _text_selector(),
-        vol.Required(
+        probatio.Required(
             CONF_METER_NUMBER,
-            default=defaults.get(CONF_METER_NUMBER, vol.UNDEFINED),
+            default=defaults.get(CONF_METER_NUMBER, probatio.UNDEFINED),
         ): _text_selector(),
     }
 
 
-def get_user_schema(defaults: Mapping[str, Any] | None = None) -> vol.Schema:
+def get_user_schema(defaults: Mapping[str, Any] | None = None) -> probatio.Schema:
     """Get schema for the initial setup step."""
     defaults = defaults or {}
-    return vol.Schema(
+    return probatio.Schema(
         {
             **_connection_fields(defaults),
-            vol.Required(CONF_UNIT_TYPE, default=defaults.get(CONF_UNIT_TYPE, DEFAULT_UNIT_TYPE)): vol.In(
+            probatio.Required(CONF_UNIT_TYPE, default=defaults.get(CONF_UNIT_TYPE, DEFAULT_UNIT_TYPE)): probatio.In(
                 [UNIT_CCF, UNIT_GALLONS],
             ),
             _number_key(CONF_TIER1_GALLONS, defaults, required=False): _NON_NEGATIVE_FLOAT,
@@ -90,24 +92,24 @@ def get_user_schema(defaults: Mapping[str, Any] | None = None) -> vol.Schema:
     )
 
 
-def get_reconfigure_schema(defaults: Mapping[str, Any]) -> vol.Schema:
+def get_reconfigure_schema(defaults: Mapping[str, Any]) -> probatio.Schema:
     """Get schema for reconfiguration.
 
     Only connection settings are reconfigured here; display unit and pricing live in the options flow,
     which takes precedence over config entry data.
     """
-    return vol.Schema(_connection_fields(defaults))
+    return probatio.Schema(_connection_fields(defaults))
 
 
-def get_reauth_schema(defaults: Mapping[str, Any]) -> vol.Schema:
+def get_reauth_schema(defaults: Mapping[str, Any]) -> probatio.Schema:
     """Get schema for reauthentication."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_USERNAME,
-                default=defaults.get(CONF_USERNAME, vol.UNDEFINED),
+                default=defaults.get(CONF_USERNAME, probatio.UNDEFINED),
             ): _text_selector(),
-            vol.Required(CONF_PASSWORD): _text_selector(password=True),
+            probatio.Required(CONF_PASSWORD): _text_selector(password=True),
         },
     )
 
