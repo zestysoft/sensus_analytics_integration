@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from types import SimpleNamespace
 
 from custom_components.sensus_analytics.const import (
@@ -98,3 +100,16 @@ def test_cost_sensors_reset_with_their_usage_counterparts() -> None:
     assert daily_fee_reset is not None
     assert billing_cost_reset(coordinator) == _description("billing_usage").last_reset_fn(coordinator)
     assert daily_fee_reset(coordinator) == _description("daily_usage").last_reset_fn(coordinator)
+
+
+def test_icons_come_from_icons_json() -> None:
+    """Each sensor resolves its icon through its translation key, not a hardcoded icon."""
+    icons_path = Path(__file__).parent.parent / "custom_components/sensus_analytics/icons.json"
+    icons = json.loads(icons_path.read_text())["entity"]["sensor"]
+    keys = {description.key for description in ENTITY_DESCRIPTIONS}
+
+    for description in ENTITY_DESCRIPTIONS:
+        assert description.translation_key == description.key
+        assert description.icon is None
+    assert set(icons) <= keys
+    assert icons["daily_usage"] == {"default": "mdi:water"}
