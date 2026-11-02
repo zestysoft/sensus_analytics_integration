@@ -35,15 +35,16 @@ credentials and no rate limit, and half of what follows would be a wasted turn.
 | A device, a cloud service, a local service, or something produced rather than fetched | Decides which of the blocks below apply at all                     |
 | `integration_type`: `device`, `service`, `hub`, or `helper`                           | Leaving it unset is not neutral — Home Assistant reads it as `hub` |
 | For a device or plan-gated service: which model, firmware, or tier                    | Decides which endpoints and fields exist at all                    |
-| Who else has integrated it — HACS, a Core integration, nobody                         | An existing one may be the answer instead of this repository       |
+| Who else has integrated it — a Marketplace one, a Core integration, nobody            | An existing one may be the answer instead of this repository       |
 
 **Where the values come from** — the branch everything else hangs off
 
-| The source                                                                         | What it means for the rest                                                    |
-| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| A network or bus endpoint: HTTP, WebSocket, MQTT, Bluetooth, serial, a vendor SDK  | "Access" and "The payload" below apply in full                                |
-| Other entities, a local file or database, a computation, the calendar or the clock | No API client and no payload — use "Produced, not fetched" instead            |
-| Nothing readable: the integration only sends commands                              | `iot_class: assumed_state`, and optimistic state becomes the central question |
+| The source                                                                         | What it means for the rest                                                       |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| A network or bus endpoint: HTTP, WebSocket, MQTT, Bluetooth, serial, a vendor SDK  | "Access" and "The payload" below apply in full                                   |
+| Other entities, a local file or database, a computation, the calendar or the clock | No API client and no payload — use "Produced, not fetched" instead               |
+| Nothing readable: the integration only sends commands                              | `iot_class: assumed_state`, and optimistic state becomes the central question    |
+| IR or RF codes for a device, sent through a blaster another integration owns       | A consumer: no API client or coordinator; the user picks the emitter in the flow |
 
 More than one source is normal — a cloud service whose values are then combined locally answers both. Ask which
 blocks apply rather than forcing the integration into one of them.
@@ -82,11 +83,11 @@ blocks apply rather than forcing the integration into one of them.
 
 **Update model**
 
-| Decision                                                   | Why it earns a turn                           |
-| ---------------------------------------------------------- | --------------------------------------------- |
-| Push or poll, and if push, what happens when it drops out  | Coordinator versus listener; `iot_class`      |
-| How fast the data genuinely changes                        | An interval faster than the data is pure load |
-| Does a command's effect show up in the next poll, or later | Whether writes need an optimistic state       |
+| Decision                                                   | Why it earns a turn                                                                            |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Push or poll, and if push, what happens when it drops out  | Coordinator versus listener; `iot_class`                                                       |
+| How fast the data genuinely changes                        | An interval faster than the data is pure load                                                  |
+| Does a command's effect show up in the next poll, or later | Whether writes update optimistically — fine for a slow cloud or a long poll, which corrects it |
 
 **Starting without a connection** — Home Assistant is often up before the router after a power cut
 
@@ -99,14 +100,15 @@ blocks apply rather than forcing the integration into one of them.
 
 **Identity**
 
-| Decision                                                             | Why it earns a turn                                                                                          |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| A stable per-install identifier — serial, MAC, account ID            | Config entry `unique_id`; never a host, IP, URL or chosen name                                               |
-| Does that identifier survive a factory reset or an account migration | If not, users lose their history                                                                             |
-| If nothing external identifies it, is that genuinely the case        | Then the entry has no `unique_id` and `entry_id` carries identity — correct for a helper, a bug for a device |
-| One config entry per device, or one entry covering many              | Device model, subentries, `via_device_id`                                                                    |
-| Is there a device at all, or only entities                           | A computed integration may legitimately register none                                                        |
-| Will the same account or source ever be added twice                  | Duplicate handling in the flow                                                                               |
+| Decision                                                              | Why it earns a turn                                                                                          |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| A stable per-install identifier — serial, MAC, account ID             | Config entry `unique_id`; never a host, IP, URL or chosen name                                               |
+| Does that identifier survive a factory reset or an account migration  | If not, users lose their history                                                                             |
+| If nothing external identifies it, is that genuinely the case         | Then the entry has no `unique_id` and `entry_id` carries identity — correct for a helper, a bug for a device |
+| One config entry per device, or one entry covering many               | Device model, subentries                                                                                     |
+| Are the other devices separate products behind a hub, or parts of one | A hub's products get `via_device_id`; an outlet of a power strip is a child device                           |
+| Is there a device at all, or only entities                            | A computed integration may legitimately register none                                                        |
+| Will the same account or source ever be added twice                   | Duplicate handling in the flow                                                                               |
 
 **Surface and failure**
 
@@ -127,7 +129,7 @@ blocks apply rather than forcing the integration into one of them.
 | Entity, attribute of an existing entity, or diagnostic         | Decides `entity_category` and whether it belongs at all        |
 | Enabled by default, or `entity_registry_enabled_default=False` | Ten noisy diagnostics per device is a complaint, not a feature |
 | Device class, state class, unit                                | Wrong ones break statistics and are breaking to correct        |
-| Which device does it belong to, in a multi-device setup        | Device registry ownership is single-owner since HA 2026.8      |
+| Which device does it belong to, in a multi-device setup        | Every device has exactly one owning config entry               |
 | What its state is before the first successful refresh          | `unknown` versus `unavailable` is user-visible                 |
 | For a writable entity: what the API does with an invalid value | Validation and the error the user gets                         |
 | Does the value exist on every model, firmware or plan tier     | Whether the entity is created conditionally                    |
@@ -173,12 +175,12 @@ questions. Almost everything here decides how much of the import is affordable a
 
 **Who is running this code**
 
-| Decision                                                                | Why it earns a turn                                               |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Roughly how many installations — HACS analytics, issue traffic, or none | The single number that decides how expensive a breaking change is |
-| Listed in HACS, or in the default repository list                       | The repository URL and its releases are load-bearing              |
-| Is there a live installation to export the entity registry from         | Whether the phase 0 baseline is measured or merely derived        |
-| Can the developer test against the real device after each phase         | What "verified" is allowed to mean in your reports                |
+| Decision                                                                 | Why it earns a turn                                               |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Roughly how many installations — download counts, issue traffic, or none | The single number that decides how expensive a breaking change is |
+| Listed in the Marketplace catalog, or added as a custom repository       | The repository URL and its releases are load-bearing              |
+| Is there a live installation to export the entity registry from          | Whether the phase 0 baseline is measured or merely derived        |
+| Can the developer test against the real device after each phase          | What "verified" is allowed to mean in your reports                |
 
 **What the maintainer actually wants**
 

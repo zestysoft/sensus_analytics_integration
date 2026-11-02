@@ -8,7 +8,7 @@ description: >-
   changelog, the pre-1.0 bump rules, script/version and script/release-notes, skipping a commit from the notes,
   and the commit rules this project enforces for agents. SYMPTOMS — load this if you are about to: commit without
   an explicit request; offer to `git push`; label a user-facing fix as `chore` (chore, like every hidden type, never
-  reaches the changelog and never triggers a release); write a commit subject over 72 characters or in sentence case;
+  reaches the changelog and never triggers a release); write a commit subject over 100 characters or in sentence case;
   or edit the version in `manifest.json` by hand.
 ---
 
@@ -73,9 +73,13 @@ commits on main → release-please opens/updates "chore(main): release X.Y.Z"
 ```
 
 `manifest.json` → `version` is the source of truth and is bumped inside the release PR by release-please
-(`release-please-config.json` → `extra-files`). Never edit it by hand.
+(`release-please-config.json` → `extra-files`). Never edit it by hand. The Marketplace depends on that: it offers the tag of the latest published GitHub Release — a bare tag is not enough — expects
+`version` to equal it, and shows the release body as the notes in the update dialog.
 
 There is no automatic merge. The developer decides when to release.
+
+How a published release reaches users, and getting the repository into the catalog in the first place, is
+[`ha-marketplace`](../ha-marketplace/SKILL.md).
 
 ## Commands
 
@@ -120,7 +124,10 @@ Also confirm:
 - The changelog entries read as user-facing statements, not commit titles.
 - Every breaking change has a `BREAKING CHANGE:` footer and a migration note.
 - `docs/user/` and the README match the released behaviour.
-- The minimum Home Assistant version in `hacs.json` and `manifest.json` is still accurate.
+- `hacs.json` → `homeassistant` is still the minimum this release needs
+  ([`ha-marketplace`](../ha-marketplace/SKILL.md#2-hacsjson--when-to-touch-it)); raising it is a breaking change
+  ([`ha-breaking-changes`](../ha-breaking-changes/SKILL.md)).
+- `custom_components/<domain>/brand/icon.png` is the product's icon, not the blueprint's placeholder.
 
 ## Troubleshooting
 
