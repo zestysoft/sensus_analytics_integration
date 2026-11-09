@@ -6,7 +6,7 @@
   "devDependencies": {
     "@commitlint/cli": "21.2.4",
     "@commitlint/config-conventional": "21.2.4",
-    "@github/copilot": "1.0.103",
+    "@github/copilot": "1.0.105",
     "markdownlint-cli2": "0.24.0",
     "prettier": "3.9.10",
     "pyright": "1.1.414"
