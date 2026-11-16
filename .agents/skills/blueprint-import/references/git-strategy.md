@@ -4,9 +4,9 @@ Read this during phase 1, before running `initialize.sh`.
 
 ## Keep the existing repository
 
-Issues, pull requests, stars, release tags and the HACS listing are tied to the repository **URL**, not to the commit
+Issues, pull requests, stars, release tags and the catalog listing are tied to the repository **URL**, not to the commit
 history inside it. Creating a new repository from the template and abandoning the old one throws all of that away, and
-HACS users end up on a repository that no longer receives updates.
+users who installed it through the Marketplace end up on a repository that no longer receives updates.
 
 Both strategies below work inside the existing repository.
 
@@ -15,7 +15,7 @@ Both strategies below work inside the existing repository.
 Least painful when the commit history is not worth preserving.
 
 1. Clone the blueprint locally:
-   `git clone https://github.com/jpawlowski/hacs.integration_blueprint.git`
+   `git clone https://github.com/jpawlowski/ha-integration-blueprint.git`
 2. Point the remote at the existing repository **before** initialising:
    `git remote set-url origin https://github.com/<you>/<your-repo>.git`
    Doing this first also avoids `initialize.sh` refusing to run against the blueprint's own remote.
@@ -34,7 +34,7 @@ Issues and pull requests survive; the commit history starts fresh.
 
 Only worth it when a continuous `git log` genuinely matters.
 
-1. `git remote add blueprint https://github.com/jpawlowski/hacs.integration_blueprint.git`
+1. `git remote add blueprint https://github.com/jpawlowski/ha-integration-blueprint.git`
 2. `git fetch blueprint`
 3. `git merge blueprint/main --allow-unrelated-histories`
 4. Resolve the conflicts — expect nearly every file to conflict, since the blueprint touches the whole tree.
