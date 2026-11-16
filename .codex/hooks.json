@@ -1,5 +1,17 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(git rev-parse --show-toplevel)/.agents/hooks/session-start.sh\"; [ -f \"$f\" ] || exit 0; bash \"$f\"",
+            "timeout": 180,
+            "statusMessage": "Preparing the development environment…"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash|shell|exec_command",
@@ -7,8 +19,8 @@
           {
             "type": "command",
             "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/pre-push-check.sh\"",
-            "timeout": 300,
-            "statusMessage": "Running script/lint-check and script/type-check before push…"
+            "timeout": 10,
+            "statusMessage": "Checking that git's pre-push hook will vet this push…"
           }
         ]
       }

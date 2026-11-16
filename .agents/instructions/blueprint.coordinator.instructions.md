@@ -62,11 +62,19 @@ The criteria are in `AGENTS.md` § Custom Integration Flexibility. The choice is
 of which can be reconstructed from `hass.config.internal_url`. It raises `NoURLAvailableError` when no suitable URL
 exists; catch it rather than falling back to a guess.
 
+**Webhooks** — the ID is the only secret a webhook has: generate it with `webhook.async_generate_id()`, never derive
+it from the entry or device. Register with `local_only=True` whenever the caller is on the local network.
+
 **Authentication:**
 
 - The auth layer authenticates; it does not **store**. Persisting tokens is the config entry's job.
 - Return tokens as JSON-serializable values (`str`, `int`, `float`, and dicts of those) so they survive being written
   into `entry.data`.
+- With the OAuth2 helper, let its token errors (`OAuth2TokenRequestError` and subclasses,
+  `ImplementationUnavailableError`) propagate — they already are `ConfigEntryNotReady` / `ConfigEntryAuthFailed`.
+  Never wrap them in `UpdateFailed`, which would turn a reauth into an endless retry.
+- A debug line that has to identify a key, token or account ID masks it — see `partial_redact` in
+  [`blueprint.python`](blueprint.python.instructions.md#error-handling).
 
 **Do not** implement retry logic here, and do not catch `TimeoutError` / `aiohttp.ClientError` in the coordinator —
 the coordinator base class already handles both.
@@ -78,19 +86,27 @@ Define in `api/__init__.py`:
 - `{ClassPrefix}ApiClientError` (Base)
 - `{ClassPrefix}ApiClientCommunicationError` (Network, timeout, HTTP errors)
 - `{ClassPrefix}ApiClientAuthenticationError` (401, 403, invalid credentials)
-- Optional: `ApiClientRateLimitError(retry_after)` for rate limiting
+- `{ClassPrefix}ApiClientRateLimitError(retry_after)` (429), a subclass of the communication error, so code that
+  only knows the base still catches it
 
-**Mapping:** HTTP 401/403 → Auth, HTTP 429 → RateLimit (parse `Retry-After`), Timeout/ClientError → Communication
+**Mapping:** HTTP 401/403 → Auth, HTTP 429 → RateLimit with the `Retry-After` seconds (a client default when the
+header is missing or a date), Timeout/ClientError → Communication
 
 ## Error Handling in `_async_update_data()`
 
 Translate API exceptions into Home Assistant ones here, and only here:
 
-| API Exception         | Raise                          | Home Assistant Behavior |
-| --------------------- | ------------------------------ | ----------------------- |
-| `AuthenticationError` | `ConfigEntryAuthFailed`        | Triggers reauth flow    |
-| `CommunicationError`  | `UpdateFailed("message")`      | Retry with backoff      |
-| `RateLimitError`      | `UpdateFailed(retry_after=60)` | Wait before retry       |
+| API Exception         | Raise                                       | Home Assistant Behavior     |
+| --------------------- | ------------------------------------------- | --------------------------- |
+| `AuthenticationError` | `ConfigEntryAuthFailed`                     | Triggers reauth flow        |
+| `RateLimitError`      | `UpdateFailed(retry_after=err.retry_after)` | Next poll waits that long   |
+| `CommunicationError`  | `UpdateFailed("message")`                   | Retry at the usual interval |
+
+Catch `RateLimitError` before the communication error it subclasses. During `async_config_entry_first_refresh()`
+Home Assistant honours `retry_after` only (HA 2026.11+); on the current minimum a rate limit at setup retries on the
+`ConfigEntryNotReady` backoff.
+Bound the wait before passing it on — at least a few seconds, at most the update interval — so `Retry-After: 0` does
+not poll in a loop and a huge value does not stop polling.
 
 **Import from:** `homeassistant.exceptions.ConfigEntryAuthFailed`,
 `homeassistant.helpers.update_coordinator.UpdateFailed`
@@ -99,7 +115,7 @@ Use `raise ... from err`. Pass the error message to the exception constructor an
 failures manually — Home Assistant does it, and manual logging buries the real error in repetition. Normal operation
 logging (debug/info) is still appropriate.
 
-See [Integration Setup Failures](https://developers.home-assistant.io/docs/integration_setup_failures).
+See [Integration Setup Failures](https://contributors.home-assistant.io/core/integrations/setup-failures/).
 
 ## Data Transformation (Coordinator Responsibility)
 
@@ -129,18 +145,20 @@ the protocol is proprietary, undocumented, or not worth the implementation effor
   released via `self.async_on_remove(...)` — a disabled entity is never added, so subscribing at setup leaks.
 - `async_set_updated_data()` on a polling coordinator also resets the timer until the next poll.
 
-See [HA Data Update Patterns](https://developers.home-assistant.io/docs/integration_fetching_data)
+See [HA Data Update Patterns](https://contributors.home-assistant.io/core/integrations/fetching-data/)
 
 ## First Refresh
 
 **In `async_setup_entry()` in `__init__.py`:** Call `await coordinator.async_config_entry_first_refresh()`
 
-**Automatic handling:** If `_async_update_data()` raises `UpdateFailed`, coordinator raises `ConfigEntryNotReady` automatically
+**Automatic handling:** If `_async_update_data()` raises `UpdateFailed`, coordinator raises `ConfigEntryNotReady`
+automatically; for what happens to `retry_after` there, see
+[Error Handling](#error-handling-in-_async_update_data).
 
 **When setup should not be retried at all**, use `await coordinator.async_refresh()` instead — it does not raise, so
 the entry loads with entities in an unavailable state rather than going into the retry loop.
 
-See [Integration Setup Failures](https://developers.home-assistant.io/docs/integration_setup_failures#integrations-using-async_setup_entry)
+See [Integration Setup Failures](https://contributors.home-assistant.io/core/integrations/setup-failures/#during-setup)
 
 ## Always Update Parameter
 
@@ -174,7 +192,8 @@ about the device:
 For the first kind:
 
 - Persist the payload with `homeassistant.helpers.storage.Store` when a fetch succeeds, and load it in
-  `async_setup_entry` before the coordinator's first refresh.
+  `async_setup_entry` before the coordinator's first refresh. **Never write files into the integration's own folder**:
+  every update replaces that folder, so anything persisted there is lost. `Store` (in `.storage/`) is the only place.
 - **Return the cached payload from `_async_update_data()` instead of raising `UpdateFailed`**, as long as it is still
   inside its validity window. This is the part that actually works: `CoordinatorEntity.available` is exactly
   `coordinator.last_update_success`, so raising `UpdateFailed` and merely leaving `coordinator.data` populated makes
@@ -193,7 +212,7 @@ value happens to flip in time. Polling for something the integration can compute
 `appropriate-polling` look violated.
 
 Entity-level state restoration is a different mechanism for a different problem — see `RestoreSensor` in
-[`platform-members.md`](../skills/ha-entity-platform/references/platform-members.md). Use it for a value the entity
+[`sensors.md`](../skills/ha-entity-platform/references/sensors.md). Use it for a value the entity
 accumulates itself; use `Store` for the payload the coordinator hands out.
 
 ## Package Organization
@@ -208,4 +227,4 @@ accumulates itself; use `Store` for the payload the coordinator hands out.
 
 ## Reference
 
-[Home Assistant: Fetching Data](https://developers.home-assistant.io/docs/integration_fetching_data)
+[Home Assistant: Fetching Data](https://contributors.home-assistant.io/core/integrations/fetching-data/)

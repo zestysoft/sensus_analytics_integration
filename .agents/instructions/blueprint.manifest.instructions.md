@@ -14,7 +14,7 @@ paths:
 
 **Schema:** `/schemas/json/manifest_schema.json`
 
-This schema combines Home Assistant's official manifest requirements with HACS-specific fields. Always validate against this schema.
+This schema combines Home Assistant's official manifest requirements with the fields the Marketplace requires. Always validate against this schema.
 
 ## Required Fields
 
@@ -39,10 +39,10 @@ This schema combines Home Assistant's official manifest requirements with HACS-s
 
 - `domain` - Integration identifier (matches directory name)
 - `name` - Display name in Home Assistant
-- `version` - Required for HACS. Any version AwesomeVersion recognises works (SemVer, CalVer); this project uses
-  SemVer, and `script/version` owns the field.
+- `version` - Required: the Marketplace refuses to install without it, and it must equal the release tag. Any version
+  AwesomeVersion recognises works (SemVer, CalVer); this project uses SemVer, and `script/version` owns the field.
 - `documentation` - Link to documentation
-- `issue_tracker` - Link to GitHub issues (required for HACS)
+- `issue_tracker` - Link to GitHub issues (required for the catalog)
 - `codeowners` - GitHub usernames for notifications
 
 **Integration behavior:**
@@ -63,13 +63,29 @@ This schema combines Home Assistant's official manifest requirements with HACS-s
   setting reaches the library too
 - `single_config_entry` - `true` prevents the user adding a second entry. This is the only thing that makes "the one
   entry" a safe assumption in a service action handler.
-- `quality_scale` - The tier the integration claims. Optional for custom integrations and not shown in the UI.
+- `categories` - One to three values from the
+  [category list](https://contributors.home-assistant.io/core/integrations/categories/), `category` or
+  `category.subcategory`, the primary one first; `schemas/json/manifest_schema.json` carries the same list. Optional
+  for a custom integration, but the catalog publishes them and the HACS action warns when the key is missing.
+  (HA 2026.11+) Hassfest rejects it before then, so add it only once `hacs.json` → `homeassistant` reaches 2026.11.
+- `quality_scale` - The tier the integration claims: `bronze` to `platinum`, or `custom`. Optional for custom
+  integrations and not shown in the UI. Hassfest rejects `silver` and above without a non-empty `codeowners`.
+- `disabled` - A reason string that stops Home Assistant from loading the integration at all; it only logs the reason.
+  An emergency brake for a release that must not run, never a feature switch.
+- `import_executor` - Custom integrations only. Defaults to `true`, importing the integration off the event loop; set
+  `false` only when the import itself must run in the event loop.
 - `dhcp`, `zeroconf`, `ssdp`, `usb`, `bluetooth` - Discovery configs. Each protocol has a matcher rule that fails
   silently when guessed — see
   [`ha-config-flow/references/discovery-matchers.md`](../skills/ha-config-flow/references/discovery-matchers.md).
 - `homekit`, `mqtt` - Protocol configs
-- `preview_features` - Home Assistant Labs. A real key, but the surrounding process (feedback threads, Core issue
-  templates) is Core-only; a HACS integration just releases a version instead.
+- `preview_features` - Home Assistant Labs features the user switches on themselves, keyed by slug, each with optional
+  `feedback_url`, `learn_more_url` and `report_issue_url`. Works for a custom integration too; point the URLs at this
+  repository, and read the switch with `async_is_preview_feature_enabled()` /
+  `async_subscribe_preview_feature()` from `homeassistant.components.labs`.
+
+There is **no minimum Home Assistant version key** in `manifest.json`. That lives in `hacs.json` → `homeassistant`
+([`ha-marketplace`](../skills/ha-marketplace/SKILL.md)), and raising it is a breaking change
+([`ha-breaking-changes`](../skills/ha-breaking-changes/SKILL.md)).
 
 **Naming:** if the product exists as both a local and a cloud integration, the cloud one appends "Cloud". The local
 one uses the plain product name — never append "Local".
@@ -96,15 +112,16 @@ Use package name with version constraint:
 ```
 
 **Only list what Home Assistant does not already ship.** A custom integration must not repeat a package from Core's
-own `requirements.txt` — `aiohttp`, `voluptuous`, `httpx`, `awesomeversion` and friends are already there, and
+own `requirements.txt` — `aiohttp`, `probatio`, `httpx`, `awesomeversion` and friends are already there, and
 pinning them from here can only conflict with Core.
 
 ## Validation
 
-`script/hassfest` is the gate. Home Assistant and HACS also validate on load, and errors appear in the log.
+`script/hassfest` is the gate. Home Assistant and the Marketplace also validate on install and load, and errors appear
+in the log.
 
 ## References
 
-- [Manifest Documentation](https://developers.home-assistant.io/docs/creating_integration_manifest/)
-- [IoT Class](https://developers.home-assistant.io/docs/integration_quality_scale_index#iot-class)
-- [HACS Requirements](https://hacs.xyz/docs/publish/include)
+- [Manifest Documentation](https://contributors.home-assistant.io/core/integrations/manifest/)
+- [IoT Class](https://contributors.home-assistant.io/core/integrations/manifest/#iot_class)
+- [Marketplace: custom integrations](https://contributors.home-assistant.io/marketplace/guides/integrations/)
