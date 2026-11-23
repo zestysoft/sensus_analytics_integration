@@ -5,12 +5,11 @@ description: >-
   breaking the installations already running it. Use when asked to "import my integration", "migrate my existing
   integration into the blueprint", "adopt the blueprint in my repository", "move my custom component over",
   "restructure my integration to match this layout", or when switching from another template such as the upstream
-  ludeeus one. Covers what must stay byte-identical, the git and repository strategy, the phase order that keeps
-  every step revertable, the stock-taking audit that produces the backlog, and how to apply this project's rules
-  to legacy code. SYMPTOMS — load this if you are about to: change the integration's domain during the move; run
+  ludeeus one. Covers what must stay byte-identical, the git strategy, the phase order that keeps every step
+  revertable, the stock-taking audit, and applying this project's rules to legacy code. SYMPTOMS — load this if you are about to: change the integration's domain during the move; run
   the whole migration as one commit; restructure packages before the imported code is green; let an automated
-  rename touch unique IDs or translation keys; let the import become a rewrite; or start editing without a
-  record of the current entity IDs.
+  rename touch unique IDs or translation keys; let the import become a rewrite; start editing without a
+  record of the current entity IDs; or merge old agent instructions into `AGENTS.md`.
 ---
 
 # Import an existing integration
@@ -26,7 +25,7 @@ migration, not as an improvement, unless the developer explicitly asked for it.
 Without a record of the current behaviour, nothing in the later phases is verifiable.
 
 Two records are needed, and they are not the same thing. This phase captures what the code **does**.
-[`ha-grill`](../ha-grill/SKILL.md) captures what the maintainer **wants** — how many installations are at stake,
+`haci-grill` (the `haci-plan` plugin) captures what the maintainer **wants** — how many installations are at stake,
 what is deliberately unusual in there, what they already know is broken, and whether a breaking release is on the
 table at all. Run that interview first: its answers decide how much of phases 3 to 7 is affordable, and an import
 planned without them optimises for the wrong constraint.
@@ -49,12 +48,15 @@ This file is the acceptance test for phases 4 to 6. Nothing in it may change wit
 
 ## Phase 1 — Repository, then `initialize.sh`
 
-**Stay in the existing GitHub repository.** Issues, stars, releases and the HACS listing are tied to the repository
-URL, not to the commit history inside it. Pull the blueprint into that repository rather than starting a new one from
-the template. The git strategies — clean force-push versus merging unrelated histories — and the repository settings
-to re-check are in [`references/git-strategy.md`](references/git-strategy.md).
+**Stay in the existing GitHub repository.** Issues, stars, releases and the catalog listing are tied to the repository
+URL, not to the commit history inside it. Bring the blueprint into that repository rather than starting a new one
+from the template. The recommended way overlays an initialised blueprint onto the existing `main` as one pull
+request — history kept, no force push — with the alternatives and the repository settings to re-check in
+[`references/git-strategy.md`](references/git-strategy.md).
 
-Then run `initialize.sh` **with the identifiers the integration already has**:
+Then run `initialize.sh` **with the identifiers the integration already has**. With the overlay,
+`script/import-overlay` runs it for you: pass the options below after its `--`, except `--domain` and `--force`,
+which it sets itself from the target.
 
 - `--domain` **must** be the existing domain. It is the primary key of every config entry and the prefix of every
   entity ID. Changing it does not migrate anything — it orphans every installation. If the developer wants a
@@ -69,7 +71,8 @@ Then run `initialize.sh` **with the identifiers the integration already has**:
 
 ## Phase 2 — Drop the code in unchanged, and get it green
 
-Copy `custom_components/<domain>/` from the old repository over the blueprint's generated one — **replacing it, not
+With the overlay, the integration folder never left — skip to making it green. With options B or C, copy
+`custom_components/<domain>/` from the old repository over the blueprint's generated one — **replacing it, not
 merging into it**. The blueprint's example platforms, API client and entities are demonstrations; keeping any of them
 alongside real code ships broken entities.
 
@@ -111,10 +114,14 @@ interruptions; one release that renames them all, with a migration and a changel
 Collect them, present them together, and let the developer choose the release
 ([`ha-breaking-changes`](../ha-breaking-changes/SKILL.md)).
 
-Turn the result into a phased plan in `.agents/scratch/` ([`ha-planning`](../ha-planning/SKILL.md)) — phases 4 to 7
+Turn the result into a phased plan in `.agents/scratch/` (`haci-planning`, where the plugin is on) — phases 4 to 7
 then execute it. Weigh it against what the interview established: an integration with thousands of installations whose
 maintainer does not want a major release has a Free-only backlog, and that is a legitimate outcome, not a failed
 import.
+
+**Take stock of the agent knowledge too.** Old `AGENTS.md`, `CLAUDE.md`, Copilot and Cursor instructions are sorted
+rule by rule into what the blueprint already ships, what is stale, the project's own rules, and its decisions — never
+merged as a file ([`references/agent-knowledge.md`](references/agent-knowledge.md)).
 
 **This phase changes no code.** A finding you fixed while cataloguing is a finding nobody reviewed, and it spends the
 phase 2 checkpoint you may still need to fall back to.
@@ -183,7 +190,7 @@ already stand on their own.
 Report which verification actually happened and which did not ([`AI_POLICY.md`](../../../AI_POLICY.md)).
 
 The first new feature after an import is the one most likely to be built on assumptions the old repository never
-stated. Run [`ha-grill`](../ha-grill/SKILL.md) before it, not after.
+stated. Run `haci-grill` before it, not after.
 
 ## Retire this skill when the import is done
 

@@ -9,11 +9,10 @@ integration. `--all` widens them to the whole instance.
 """
 
 import json
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .client import EXIT_UNREACHABLE, HaError
-from .instance import run_state
+from .client import EXIT_UNREACHABLE, TOKEN_FILE, HaError
+from .instance import CONFIG_DIR, develop_run, run_state
 from .output import emit_json, emit_pairs, emit_table
 
 if TYPE_CHECKING:
@@ -21,7 +20,7 @@ if TYPE_CHECKING:
 
     from .client import HaClient
 
-META_FILE = Path("config/.storage/dev_access_token.json")
+META_FILE = CONFIG_DIR / ".storage" / "dev_access_token.json"
 
 LOG_LEVELS = ("debug", "info", "warning", "error", "critical")
 
@@ -81,14 +80,19 @@ async def cmd_status(client: HaClient, args: argparse.Namespace) -> int:
             print(verdict)
         return EXIT_UNREACHABLE
 
+    run = develop_run() if local.running else {}
     if args.json:
-        emit_json({"config": config, "core": core, "local_lock_held": local.running, "uptime": local.uptime})
+        emit_json(
+            {"config": config, "core": core, "local_lock_held": local.running, "uptime": local.uptime, "run": run}
+        )
         return 0
     emit_pairs(
         {
             "url": client.url,
             "state": core.get("state"),
             "version": config.get("version"),
+            "environment": run.get("slot") or "-",
+            "started_by": run.get("started_by") or "-",
             "location": config.get("location_name"),
             "config_dir": config.get("config_dir"),
             "started": local.started.isoformat(timespec="seconds") if local.started else "-",
@@ -177,13 +181,13 @@ async def cmd_devices(client: HaClient, args: argparse.Namespace) -> int:
     devices = await client.ws("config/device_registry/list")
     if not args.all:
         entry_ids = {entry["entry_id"] for entry in await our_entries(client, args.domain)}
-        devices = [device for device in devices if entry_ids.intersection(device.get("config_entries", []))]
+        devices = [device for device in devices if device.get("config_entry_id") in entry_ids]
     if args.json:
         emit_json(devices)
         return 0
     emit_table(
         devices,
-        ["id", "name", "manufacturer", "model", "sw_version", "via_device_id", "disabled_by"],
+        ["id", "name", "manufacturer", "model", "sw_version", "via_device_id", "parent_device_id", "disabled_by"],
         empty=f"no devices for {args.domain}",
     )
     return 0
@@ -421,5 +425,5 @@ async def cmd_token(client: HaClient, args: argparse.Namespace) -> int:
     del client, args
     if not META_FILE.is_file():
         raise HaError("no development token — run ./script/develop")
-    emit_pairs(json.loads(META_FILE.read_text(encoding="utf-8")) | {"token_file": "config/.storage/dev_access_token"})
+    emit_pairs(json.loads(META_FILE.read_text(encoding="utf-8")) | {"token_file": str(TOKEN_FILE)})
     return 0

@@ -51,12 +51,12 @@ Where something _is_ fetched, the payload is the fact that cannot be guessed. As
 a curl dump, a log line, a screenshot of the vendor docs. Entities built against an invented shape look finished and
 fail on first contact.
 
-This table is the minimum, not the whole interview. [`ha-grill`](../ha-grill/SKILL.md) is how to get it out of the
+This table is the minimum, not the whole interview. `haci-grill` (the `haci-plan` plugin) is how to get it out of the
 developer — one question at a time, in dependency order — and it ends with a brief that steps 2 to 6 then execute.
 
 If a maintained PyPI library already wraps this API, weigh it against a small `aiohttp` client using the criteria in
 [`AGENTS.md`](../../../AGENTS.md) ("Custom Integration Flexibility"), and record the outcome in
-`docs/development/DECISIONS.md` ([`ha-planning`](../ha-planning/SKILL.md)). This is the decision that is most
+a decision record in `docs/development/decisions/` ([`blueprint-decisions`](../blueprint-decisions/SKILL.md)). This is the decision that is most
 expensive to revisit later.
 
 ## 2. Classify it in the manifest
@@ -77,6 +77,10 @@ Set `iot_class` to match reality. Beyond `local_polling`, `cloud_polling`, `loca
 `calculated`, for an integration that derives its values instead of fetching them, and `assumed_state`, for one that
 sends commands it cannot read back.
 
+Pick one to three `categories` with the developer — "what is this, and where would someone look for it?" — from the
+list in `schemas/json/manifest_schema.json`, primary first, unless `initialize.sh` already wrote them. The
+Marketplace catalog publishes them; when to add the key is in `blueprint.manifest`.
+
 Add discovery matchers only when you will also implement the matching flow step
 ([`ha-config-flow`](../ha-config-flow/SKILL.md)); a matcher without a handler fails `script/hassfest`.
 
@@ -96,7 +100,8 @@ above it exists.
    itself, such as a closed account — `ConfigEntryError`, there and only there
    ([`ha-coordinator-debug`](../ha-coordinator-debug/SKILL.md)). If the values are produced rather than fetched, this
    is where the computation lives, driven by a state listener or a timer instead of a poll — and a coordinator that
-   would only re-run a local calculation on a timer should be replaced by the listener outright.
+   would only re-run a local calculation on a timer should be replaced by the listener outright. The polling interval
+   is a constant, never a config field ([`blueprint.config_flow`](../../instructions/blueprint.config_flow.instructions.md)).
 3. **`data.py` / `const.py`** — the runtime data container and the constants the platforms share.
 
 If one response stays true for a defined period — a day's prices, a published forecast — decide **now** whether the
@@ -112,12 +117,12 @@ because every entity would otherwise repeat the same defensive key lookups.
 `DataUpdateCoordinator` polls, and a BLE device that broadcasts advertisements has nothing to poll. Pick by how the
 data actually arrives:
 
-| The device…                                                | Coordinator                                                            |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Broadcasts, and feeds `sensor` / `binary_sensor` / `event` | `PassiveBluetoothProcessorCoordinator`                                 |
-| Broadcasts, but some values need a connection              | `ActiveBluetoothProcessorCoordinator`                                  |
-| Broadcasts, and feeds other platforms                      | `PassiveBluetoothCoordinator` / `ActiveBluetoothDataUpdateCoordinator` |
-| Only answers when connected to                             | plain `DataUpdateCoordinator`                                          |
+| The device…                                                | Coordinator                                                                      |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Broadcasts, and feeds `sensor` / `binary_sensor` / `event` | `PassiveBluetoothProcessorCoordinator`                                           |
+| Broadcasts, but some values need a connection              | `ActiveBluetoothProcessorCoordinator`                                            |
+| Broadcasts, and feeds other platforms                      | `PassiveBluetoothDataUpdateCoordinator` / `ActiveBluetoothDataUpdateCoordinator` |
+| Only answers when connected to                             | plain `DataUpdateCoordinator`                                                    |
 
 - `bluetooth_adapters` goes in `dependencies` — it guarantees remote adapters are connected before you use them.
 - Get the scanner from `bluetooth.async_get_scanner(hass)` and hand it to the library; never construct your own.
@@ -127,6 +132,12 @@ data actually arrives:
   `entry.async_on_unload(coordinator.async_start())`.
 - An advertisement-only device needs `connectable: false` in the manifest matcher
   ([`ha-config-flow`](../ha-config-flow/references/discovery-matchers.md)).
+
+### Infrared and radio remotes have no source of their own
+
+An integration that knows a device's IR or RF codes — a TV, a fan, a wireless socket — but not the hardware that
+sends them is a _consumer_: no `api/`, no coordinator, `integration_type: device` and `iot_class: assumed_state` —
+the pattern is in [`other-platforms.md`](../ha-entity-platform/references/other-platforms.md#infrared-and-radio-frequency-devices).
 
 ## 4. Keep, adapt, delete each platform
 
@@ -139,7 +150,9 @@ each one: does this integration have a real equivalent — a value it reads, com
 
 Then update `PLATFORMS` in `custom_components/<domain>/__init__.py` to exactly the surviving list, and delete the
 matching `entity.<platform>.*` blocks from `translations/en.json` and `icons.json`. A platform left in `PLATFORMS`
-without a directory fails at setup; an orphaned translation key fails `script/hassfest`.
+without a directory fails at setup; an orphaned translation key fails `script/hassfest`. The example tests under
+`tests/` go in the same step as the code they cover: CI runs `script/test` on every pull request, so a test left
+behind for a deleted platform turns it red.
 
 Same treatment for `service_actions/` and `services.yaml` — the example actions go unless the device has a real
 equivalent ([`ha-service-action`](../ha-service-action/SKILL.md)).
@@ -169,11 +182,10 @@ verification is the developer's to do, not yours to claim.
 ## 7. Finish the paperwork, then retire this skill
 
 - Update `README.md` and `docs/user/` to describe the real integration.
-- Add the brand images. Since Home Assistant 2026.3 a custom integration ships its own, in
-  `custom_components/<domain>/brand/` as `icon.png` and `logo.png`; local images take precedence over the
-  `home-assistant/brands` repository, which only Core integrations can use. Ask the developer for the files — do not
-  invent placeholders, and do not open a pull request against `home-assistant/brands`.
-- Record the library-versus-own-client decision in `docs/development/DECISIONS.md` if you have not already.
+- Replace the placeholder images in `custom_components/<domain>/brand/` — the rules are in
+  [`ha-marketplace`](../ha-marketplace/SKILL.md#3-brand-images). Ask the developer for the files; do not invent
+  artwork.
+- Record the library-versus-own-client decision in `docs/development/decisions/` if you have not already.
 - Commit in reviewable pieces, following [`ha-release`](../ha-release/SKILL.md). Never commit unasked.
 
 Scaffolding happens once. Once the integration is real, this skill is dead weight in every future session, so remove

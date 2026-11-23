@@ -51,7 +51,7 @@ replaced with `**REDACTED**` wherever they appear as keys.
 ## Inspecting
 
 ```bash
-script/ha status                       # up? since when? which version, which config dir
+script/ha status                       # up? since when? which version, environment and config dir, who started it
 script/ha entries                      # config entry state and failure reason
 script/ha states                       # every entity of this integration
 script/ha states sensor.<id>           # one entity in full, attributes included
@@ -65,6 +65,8 @@ script/ha setup-info                   # setup timing and the manifest
 `config/.ha_run.lock`. That matters because the instance is shared: an `uptime` of seconds when you left it running for
 an hour means the developer restarted it. Use this instead of `ps` or `pgrep` — the lock file stays behind after a
 shutdown with a stale PID, so its mere presence proves nothing, and only the lock is authoritative.
+`environment` and `started_by` come from what `script/develop` recorded when it started the instance: which Home
+Assistant environment (`script/ha-env`) it runs, and whether the developer or an agent started it.
 
 When it is not reachable, `status` still distinguishes the two cases: nothing running at all, or a local instance
 holding the lock but not answering yet because it is still starting.

@@ -6,18 +6,18 @@ point for what to look for.
 
 ## Deprecated or removed APIs
 
-| Found in older integrations                                             | Replace with                                                  |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `hass.data[DOMAIN][entry.entry_id] = …`                                 | `entry.runtime_data`, with a typed config entry alias         |
-| `hass.config_entries.async_setup_platforms(...)`                        | `await hass.config_entries.async_forward_entry_setups(...)`   |
-| `async_timeout.timeout(...)`                                            | `asyncio.timeout(...)`                                        |
-| `DEVICE_CLASS_*` / `STATE_CLASS_*` constants                            | the `SensorDeviceClass` / `SensorStateClass` enums            |
-| `FlowResult`                                                            | `ConfigFlowResult`                                            |
-| `aiohttp.ClientSession()` created by the integration                    | `async_get_clientsession(hass)`                               |
-| `self._attr_name` on every entity                                       | `translation_key` plus `_attr_has_entity_name`                |
-| `async_get_device(identifiers=…)` unscoped                              | `async_get_device_by_identifier()` scoped to the owning entry |
-| `entity_registry.async_get(hass).async_get_or_create(...)` in an entity | let the platform's `async_add_entities` do it                 |
-| `config_entry.async_on_unload` missing around listeners                 | register every listener through it                            |
+| Found in older integrations                                             | Replace with                                                                                                          |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `hass.data[DOMAIN][entry.entry_id] = …`                                 | `entry.runtime_data`, with a typed config entry alias                                                                 |
+| `hass.config_entries.async_setup_platforms(...)`                        | `await hass.config_entries.async_forward_entry_setups(...)`                                                           |
+| `async_timeout.timeout(...)`                                            | `asyncio.timeout(...)`                                                                                                |
+| `DEVICE_CLASS_*` / `STATE_CLASS_*` constants                            | the `SensorDeviceClass` / `SensorStateClass` enums                                                                    |
+| `FlowResult`                                                            | `ConfigFlowResult`                                                                                                    |
+| `aiohttp.ClientSession()` created by the integration                    | `async_get_clientsession(hass)`                                                                                       |
+| `self._attr_name` on every entity, often with the device name inside it | `translation_key` plus `_attr_has_entity_name`; entity IDs stay, displayed names change — say so in the release notes |
+| `async_get_device(identifiers=…)` unscoped                              | `async_get_device_by_identifier()` scoped to the owning entry                                                         |
+| `entity_registry.async_get(hass).async_get_or_create(...)` in an entity | let the platform's `async_add_entities` do it                                                                         |
+| `config_entry.async_on_unload` missing around listeners                 | register every listener through it                                                                                    |
 
 Two more that do not raise a warning and are easy to miss:
 

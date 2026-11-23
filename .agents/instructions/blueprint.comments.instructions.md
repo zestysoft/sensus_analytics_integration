@@ -64,13 +64,14 @@ Dropping a comment is not dropping the knowledge. Route it:
 | The information                                     | Home                                                     |
 | --------------------------------------------------- | -------------------------------------------------------- |
 | Why this change, now, and what it replaced          | The commit message body — see `blueprint.commit-message` |
-| An architectural decision and its alternatives      | `docs/development/DECISIONS.md`                          |
+| An architectural decision and its alternatives      | a record in `docs/development/decisions/`                |
 | How the layers fit together                         | `docs/development/ARCHITECTURE.md`                       |
 | How to carry out a recurring task                   | An agent skill under `.agents/skills/`                   |
 | A rule agents must follow while editing a file type | An instructions file here                                |
 | What a user has to do or expect                     | `docs/user/`                                             |
 | What a function does, takes and returns             | Its docstring                                            |
 | Working notes for the current task only             | `.agents/scratch/` — never committed                     |
+| A mistake an agent must not repeat                  | the `blueprint-lessons` skill                            |
 | Public knowledge you happened to look up            | Nowhere. Say it once in chat and let it go.              |
 
 The last row is the one that gets ignored. Research does not need a resting place just because it was work; store it
@@ -88,4 +89,4 @@ moment they go looking, and it cannot go stale — the code it describes is froz
 | JSON (`manifest.json`, translations, …) | none       | The format has none. Say it in the schema, or in `docs/`.                                                                                       |
 | JSONC (`.devcontainer/`, `*.jsonc`)     | `//`       | Comments are _possible_ here, which is not the same as wanted. Gate 1 decides, and the answer is usually no.                                    |
 | Shell in `script/`                      | `#`        | The header block from `blueprint.shell` (name, description, usage); in the body only for non-obvious logic. Shellcheck disables carry a reason. |
-| Markdown                                | `<!-- -->` | Only for machine-read markers such as `blueprint-only` and `repo-role`. Prose explains itself.                                                  |
+| Markdown                                | `<!-- -->` | Only for machine-read markers such as `blueprint-only`, `repo-role` and `ha-marketplace:exclude-start`/`-end`. Prose explains itself.           |
