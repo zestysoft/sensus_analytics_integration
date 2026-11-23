@@ -64,8 +64,10 @@ Rules:
 | Script                            | pre hook                                     | post hook                                     |
 | --------------------------------- | -------------------------------------------- | --------------------------------------------- |
 | `script/architecture-check`       | `script/hooks/architecture-check.pre.sh`     | `script/hooks/architecture-check.post.sh`     |
+| `script/build`                    | `script/hooks/build.pre.sh`                  | `script/hooks/build.post.sh`                  |
 | `script/check`                    | `script/hooks/check.pre.sh`                  | `script/hooks/check.post.sh`                  |
 | `script/clean`                    | `script/hooks/clean.pre.sh`                  | `script/hooks/clean.post.sh`                  |
+| `script/decisions`                | `script/hooks/decisions.pre.sh`              | `script/hooks/decisions.post.sh`              |
 | `script/develop`                  | `script/hooks/develop.pre.sh`                | — (long-running process)                      |
 | `script/ha`                       | `script/hooks/ha.pre.sh`                     | `script/hooks/ha.post.sh`                     |
 | `script/hassfest`                 | `script/hooks/hassfest.pre.sh`               | `script/hooks/hassfest.post.sh`               |
@@ -73,10 +75,12 @@ Rules:
 | `script/lint`                     | `script/hooks/lint.pre.sh`                   | `script/hooks/lint.post.sh`                   |
 | `script/lint-check`               | `script/hooks/lint-check.pre.sh`             | `script/hooks/lint-check.post.sh`             |
 | `script/markdown`                 | `script/hooks/markdown.pre.sh`               | `script/hooks/markdown.post.sh`               |
+| `script/push-gate`                | `script/hooks/push-gate.pre.sh`              | `script/hooks/push-gate.post.sh`              |
 | `script/markdown-check`           | `script/hooks/markdown-check.pre.sh`         | `script/hooks/markdown-check.post.sh`         |
 | `script/python`                   | `script/hooks/python.pre.sh`                 | `script/hooks/python.post.sh`                 |
 | `script/python-check`             | `script/hooks/python-check.pre.sh`           | `script/hooks/python-check.post.sh`           |
 | `script/release-notes`            | `script/hooks/release-notes.pre.sh`          | `script/hooks/release-notes.post.sh`          |
+| `script/second-review`            | `script/hooks/second-review.pre.sh`          | `script/hooks/second-review.post.sh`          |
 | `script/shell`                    | `script/hooks/shell.pre.sh`                  | `script/hooks/shell.post.sh`                  |
 | `script/shell-check`              | `script/hooks/shell-check.pre.sh`            | `script/hooks/shell-check.post.sh`            |
 | `script/spell`                    | `script/hooks/spell.pre.sh`                  | `script/hooks/spell.post.sh`                  |
@@ -98,3 +102,27 @@ Rules:
 | `.devcontainer/setup-shell.sh`    | `.devcontainer/hooks/setup-shell.pre.sh`     | `.devcontainer/hooks/setup-shell.post.sh`     |
 | `.devcontainer/setup-git.sh`      | `.devcontainer/hooks/setup-git.pre.sh`       | `.devcontainer/hooks/setup-git.post.sh`       |
 | `.devcontainer/post-attach.sh`    | `.devcontainer/hooks/post-attach.pre.sh`     | `.devcontainer/hooks/post-attach.post.sh`     |
+
+A hook is the wrong place to change the release notes prompt: what the notes should know about the integration goes into
+`.github/release-notes/prompt.md` ([`ha-release`](../../ha-release/SKILL.md)).
+
+## The build hook
+
+`script/build` empties `$BUILD_DIR`, runs `build.pre.sh`, copies the tracked files of the integration over it, runs
+`build.post.sh`, checks the result and packs the release ZIP. A hook adds what is generated rather than committed — a
+bundled card, a data file — by writing into `$BUILD_DIR`, an absolute path to the integration folder as it ships:
+
+```bash
+# script/hooks/build.post.sh
+log_step "Bundling the cards"
+npm --prefix frontend ci --silent
+npm --prefix frontend run build -- --outfile "$BUILD_DIR/frontend/cards.js"
+```
+
+- The release job sets up mise only when a build hook exists; put the tools the hook needs into
+  `.config/mise/conf.d/project.toml`, never into the workflow.
+- `script/build --in-place` runs the hooks on `custom_components/<domain>/` itself, so `script/develop` sees the
+  generated files. Ignore them in `custom_components/.gitignore`.
+- Generate only additions. `manifest.json`, translations, `services.yaml` and Python modules stay committed: hassfest,
+  the HACS action and the tests check the repository, not the ZIP.
+- `script/build` alone previews what a release ships, in `.local/build/<domain>/`.

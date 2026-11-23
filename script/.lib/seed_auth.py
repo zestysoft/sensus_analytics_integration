@@ -30,6 +30,8 @@ import sys
 import tempfile
 from typing import TYPE_CHECKING
 
+from ha_cli.instance import CONFIG_DIR, LOCK_FILE
+
 from homeassistant.auth import auth_manager_from_config
 from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 from homeassistant.config_entries import ConfigEntries
@@ -51,12 +53,10 @@ EXIT_HA_RUNNING = 12
 EXIT_REVOKED = 13
 EXIT_NOTHING_TO_REVOKE = 14
 
-CONFIG_DIR = Path("config")
 STORAGE_DIR = CONFIG_DIR / ".storage"
 AUTH_STORE = STORAGE_DIR / "auth"
 TOKEN_FILE = STORAGE_DIR / "dev_access_token"
 META_FILE = STORAGE_DIR / "dev_access_token.json"
-LOCK_FILE = CONFIG_DIR / ".ha_run.lock"
 
 DEFAULT_CLIENT_NAME = "blueprint-dev-cli"
 DEFAULT_LIFESPAN_DAYS = 30

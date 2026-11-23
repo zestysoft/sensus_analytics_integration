@@ -368,6 +368,29 @@ def check_catalogue(skill_dirs: list[Path]) -> list[Report]:
     return reports
 
 
+def check_project_instructions_routed() -> list[Report]:
+    """
+    Verify that AGENTS.md names every instructions file the project wrote itself.
+
+    Codex and OpenCode load no instructions file on their own; the routing table in
+    AGENTS.md is the only way they find one. The shipped blueprint.* files are listed there
+    already, so only the project's own files are checked.
+    """
+    if not AGENTS_CATALOGUE.is_file():
+        return []
+    rows = [line for line in AGENTS_CATALOGUE.read_text(encoding="utf-8").splitlines() if line.startswith("|")]
+    reports: list[Report] = []
+    for path in sorted(INSTRUCTIONS_DIR.glob("*.instructions.md")):
+        if path.name.startswith("blueprint."):
+            continue
+        report = Report(skill=str(path))
+        name = path.name.removesuffix(".instructions.md")
+        if not any(f"`{name}`" in row for row in rows):
+            report.error(f"{AGENTS_CATALOGUE} does not name {name} — Codex and OpenCode find it only there")
+        reports.append(report)
+    return reports
+
+
 def main() -> int:
     """Validate every skill and print a summary."""
     if not SKILLS_DIR.is_dir():
@@ -381,7 +404,7 @@ def main() -> int:
 
     reports = [check_skill(d) for d in skill_dirs]
     instruction_reports = check_instruction_paths()
-    pointer_reports = [*check_pointer_links(), *check_catalogue(skill_dirs)]
+    pointer_reports = [*check_pointer_links(), *check_catalogue(skill_dirs), *check_project_instructions_routed()]
     marker_reports = [*check_blueprint_only_markers(), check_repo_role_markers()]
 
     for report in reports:

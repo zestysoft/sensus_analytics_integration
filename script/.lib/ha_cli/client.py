@@ -8,10 +8,11 @@ exit code the caller should use, so no command has to think about aiohttp.
 import asyncio
 import json
 import os
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Self
 
 import aiohttp
+
+from .instance import CONFIG_DIR
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -22,7 +23,7 @@ EXIT_ERROR = 1
 EXIT_UNREACHABLE = 2
 EXIT_AUTH = 3
 
-TOKEN_FILE = Path("config/.storage/dev_access_token")
+TOKEN_FILE = CONFIG_DIR / ".storage" / "dev_access_token"
 DEFAULT_URL = "http://127.0.0.1:8123"
 
 _UNREACHABLE_HINT = "Home Assistant is not reachable at {url} — start it with ./script/develop"

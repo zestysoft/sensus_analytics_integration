@@ -54,3 +54,35 @@ def test_agents_catalogue_is_required_only_in_blueprint(
         assert "example-skill is not linked from this catalogue" in result.stdout
     else:
         assert "1 synchronized catalogue(s) are complete" in result.stdout
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(("routed", "expected_returncode"), [(False, 1), (True, 0)])
+def test_project_instructions_file_needs_a_routing_row(
+    tmp_path: Path,
+    *,
+    routed: bool,
+    expected_returncode: int,
+) -> None:
+    """Codex and OpenCode find a project instructions file only through AGENTS.md."""
+    _write_minimal_skill_repository(tmp_path, blueprint=False)
+    patterns = "custom_components/**/periods/**/*.py"
+    (tmp_path / ".agents" / "instructions" / "myint.periods.instructions.md").write_text(
+        f'---\nname: "Periods"\ndescription: "Period rules"\napplyTo: "{patterns}"\npaths:\n  - "{patterns}"\n---\n\n'
+        "# Periods\n",
+        encoding="utf-8",
+    )
+    if routed:
+        with (tmp_path / "AGENTS.md").open("a", encoding="utf-8") as agents:
+            agents.write("| periods | — | `myint.periods` |\n")
+
+    result = subprocess.run(
+        [sys.executable, str(CHECKER)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == expected_returncode, result.stdout
+    assert ("does not name myint.periods" in result.stdout) is not routed

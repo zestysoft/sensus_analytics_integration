@@ -95,13 +95,7 @@ require_command() {
 # healthy. Fall back to the other locations, but say so.
 resolve_venv_path() {
     local preferred candidate
-    if [[ -n ${REMOTE_CONTAINERS:-} || -n ${CODESPACES:-} ]]; then
-        preferred="$HOME/ha-venv"
-    elif [[ -n ${GITHUB_ACTIONS:-} ]]; then
-        preferred="${GITHUB_WORKSPACE:-.}/.local/ha-venv"
-    else
-        preferred="$PWD/.local/ha-venv"
-    fi
+    preferred="$(ha_venv_preferred_path)"
 
     if [[ -f "$preferred/bin/activate" ]]; then
         printf '%s' "$preferred"
@@ -120,20 +114,108 @@ resolve_venv_path() {
     return 1
 }
 
-# Activate the Home Assistant virtual environment if not already active.
-# Silently skips when VIRTUAL_ENV is already set (e.g. in CI or nested calls).
+# Print where bootstrap keeps the venv here: a named volume in the dev container, the workspace everywhere else.
+ha_venv_preferred_path() {
+    if [[ -n ${REMOTE_CONTAINERS:-} || -n ${CODESPACES:-} ]]; then
+        printf '%s' "$HOME/ha-venv"
+    elif [[ -n ${GITHUB_ACTIONS:-} ]]; then
+        printf '%s' "${GITHUB_WORKSPACE:-$PWD}/.local/ha-venv"
+    else
+        printf '%s' "$PWD/.local/ha-venv"
+    fi
+}
+
+# Print the active Home Assistant environment (script/ha-env), or nothing for a venv without environments.
+ha_current_slot() {
+    local venv_path link
+    venv_path="$(resolve_venv_path 2>/dev/null)" || return 0
+    link="$(readlink "$venv_path/current" 2>/dev/null)" || return 0
+    printf '%s' "${link##*/}"
+}
+
+# Whether a local Home Assistant runs in any environment: one holds the lock on its config directory's run lock.
+ha_running() {
+    python3 - config/.ha_run.lock .local/ha-config/*/.ha_run.lock <<'PY'
+import fcntl, sys
+for name in sys.argv[1:]:
+    try:
+        with open(name, "a") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        sys.exit(0)
+    except OSError:
+        continue
+sys.exit(1)
+PY
+}
+
+# Print the environment a running Home Assistant uses — from the record script/develop writes, which stays right after
+# script/ha-env use --force — or nothing when none runs.
+ha_running_slot() {
+    ha_running || return 0
+    local slot
+    slot=$(jq -r '.slot // empty' .local/ha-develop.json 2>/dev/null) || slot=""
+    printf '%s' "${slot:-$(ha_current_slot)}"
+}
+
+# Print who runs this script: an agent where the agent says so in its environment, the developer otherwise.
+ha_actor() {
+    if [[ -n ${AI_AGENT:-} ]]; then
+        printf 'agent (%s)' "${AI_AGENT%%_*}"
+    elif [[ -n ${CLAUDECODE:-} ]]; then
+        printf 'agent (claude-code)'
+    else
+        printf 'developer'
+    fi
+}
+
+# Print the config directory of the active Home Assistant environment, relative to the repository root:
+# config/ for minimum (and for a venv without environments), its own directory for every other one.
+ha_config_dir() {
+    local slot
+    slot="$(ha_current_slot)"
+    case "$slot" in
+    "" | minimum) printf 'config' ;;
+    *) printf '.local/ha-config/%s' "$slot" ;;
+    esac
+}
+
+# Point VIRTUAL_ENV and PATH at the venv root, whose links follow script/ha-env use; bin/activate would pin the
+# version directory behind them, and an activation that names one is moved back to the root.
+_use_venv() {
+    export VIRTUAL_ENV="$1" PATH="$1/bin:$PATH" VIRTUAL_ENV_DISABLE_PROMPT=1
+    unset PYTHONHOME
+    hash -r
+}
+
+# Activate the Home Assistant virtual environment if not already active, and export HA_CONFIG_DIR for it.
 activate_venv() {
-    if [[ -n ${VIRTUAL_ENV:-} ]]; then
+    export HA_CONFIG_DIR
+    HA_CONFIG_DIR="$(ha_config_dir)"
+    if [[ -n ${VIRTUAL_ENV:-} && $VIRTUAL_ENV != */versions/* ]]; then
         return 0
     fi
     local venv_path
     if ! venv_path="$(resolve_venv_path)"; then
-        log_error "Virtual environment not found. Run: script/setup/bootstrap"
+        if [[ "$(run_state bootstrap)" == "running" ]]; then
+            log_error "The development environment is still being set up — wait for .local/bootstrap.status to change, progress is in .local/bootstrap.log"
+        else
+            log_error "Virtual environment not found. Run: script/setup/bootstrap"
+        fi
         exit 1
     fi
     log_header "Activating virtual environment"
-    # shellcheck source=/dev/null
-    source "$venv_path/bin/activate"
+    _use_venv "$venv_path"
+}
+
+# Like activate_venv, for a script that needs the venv only for optional extras: carries on without one.
+activate_venv_if_present() {
+    if [[ -n ${VIRTUAL_ENV:-} && $VIRTUAL_ENV != */versions/* ]]; then
+        return 0
+    fi
+    local venv_path
+    venv_path="$(resolve_venv_path)" || return 0
+    _use_venv "$venv_path"
 }
 
 # Run a user-defined hook script if it exists.
@@ -158,3 +240,75 @@ run_hook() {
         source "$hook_file"
     fi
 }
+
+# Print how the last run of a script that calls track_run went: running, done, failed or nothing. A run whose process
+# is gone without recording an end counts as failed.
+run_state() {
+    local state pid
+    state="$(cat ".local/$1.status" 2>/dev/null || true)"
+    if [[ $state == "running" ]]; then
+        pid="$(cat ".local/$1.pid" 2>/dev/null || true)"
+        if [[ -z $pid ]] || ! kill -0 "$pid" 2>/dev/null; then
+            state="failed"
+        fi
+    fi
+    printf '%s' "$state"
+}
+
+# Record this script's run in .local/<name>.status and .local/<name>.pid, and its outcome when it exits. With
+# --exclusive, a second run while one is alive stops instead of competing for the same environment.
+track_run() {
+    local name=$1
+    if [[ ${2:-} == "--exclusive" && "$(run_state "$name")" == "running" ]]; then
+        die "script/setup/$name is already running (PID $(cat ".local/$name.pid")); wait for it to finish"
+    fi
+    mkdir -p .local
+    echo "$$" >".local/$name.pid"
+    echo "running" >".local/$name.status"
+    # shellcheck disable=SC2064 # $name is fixed now, the exit status when the trap runs
+    trap "_finish_run $name \$?" EXIT
+}
+
+# Wait while another run of a tracked script is alive, up to a limit in seconds (default 900). Returns 1 on timeout.
+wait_for_run() {
+    local name=$1 limit=${2:-900} waited=0
+    while [[ "$(run_state "$name")" == "running" ]]; do
+        if ((waited >= limit)); then
+            return 1
+        fi
+        if ((waited == 0)); then
+            log_info "Waiting for the script/setup/$name run already in progress (PID $(cat ".local/$name.pid" 2>/dev/null))"
+        fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+}
+
+_finish_run() {
+    if [[ $2 -eq 0 ]]; then
+        echo "done" >".local/$1.status"
+    else
+        echo "failed" >".local/$1.status"
+    fi
+    rm -f ".local/$1.pid"
+}
+
+# Apply what mise resolves for this checkout: the pinned tools and the venv mise.toml names, in front of PATH. Every
+# script gets them whether or not the calling shell activated mise — an agent's shell, a cloud session and a git hook
+# usually have not. Without mise, or before the checkout trusts mise.toml, nothing changes.
+use_mise_env() {
+    local mise_bin script
+    mise_bin="$(command -v mise 2>/dev/null || true)"
+    if [[ -z $mise_bin && -x "$HOME/.local/bin/mise" ]]; then
+        mise_bin="$HOME/.local/bin/mise"
+    fi
+    [[ -n $mise_bin && -f mise.toml ]] || return 0
+    script="$(MISE_HIDE_UPDATE_WARNING=1 "$mise_bin" env -s bash 2>/dev/null)" || return 0
+    eval "$script"
+    export _BLUEPRINT_MISE_ENV="$PWD"
+}
+
+# A script started by another one inherits the environment already applied, so only the outermost one asks mise.
+if [[ ${_BLUEPRINT_MISE_ENV:-} != "$PWD" ]]; then
+    use_mise_env
+fi

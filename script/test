@@ -29,8 +29,11 @@ cd "$SCRIPT_DIR/.."
 source "$SCRIPT_DIR/.lib/output.sh"
 # shellcheck source=script/.lib/integration.sh
 source "$SCRIPT_DIR/.lib/integration.sh"
+# shellcheck source=script/.lib/ha_envs.sh
+source "$SCRIPT_DIR/.lib/ha_envs.sh"
 
 activate_venv
+ha_envs_notice
 
 # Parse coverage flags
 COVERAGE_ARGS=()

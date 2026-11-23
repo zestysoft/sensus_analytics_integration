@@ -4,14 +4,14 @@
     "type-enum": [
       2,
       "always",
-      ["feat", "fix", "chore", "refactor", "docs", "test", "ci", "perf"]
+      ["feat", "fix", "build", "chore", "refactor", "docs", "test", "ci", "perf"]
     ],
     "scope-enum": [
       2,
       "never",
-      ["feat", "fix", "chore", "refactor", "docs", "test", "ci", "perf"]
+      ["feat", "fix", "build", "chore", "refactor", "docs", "test", "ci", "perf"]
     ],
-    "header-max-length": [2, "always", 72],
+    "header-max-length": [2, "always", 100],
     "subject-full-stop": [2, "never", "."],
     "subject-case": [
       2,

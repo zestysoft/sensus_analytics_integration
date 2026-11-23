@@ -72,6 +72,11 @@ script/ha status    # exit 0 up, exit 2 down; `started` and `uptime` reveal a re
 - **Announce it before you take exclusive control**, so the developer knows to keep their hands off meanwhile. That
   covers `script/setup/reset`, `script/ha token --rotate` and `--revoke`, and any loop that restarts repeatedly — all
   of them need Home Assistant stopped or undisturbed.
+- **The Home Assistant environment is the developer's choice, never yours.** `script/ha-env use`,
+  `script/ha-env refresh` and `script/develop --env` move every terminal, `script/test` and the instance to another
+  version at once. Switch only when asked; `script/ha-env list` and `script/ha status` show what is active and who
+  started the running instance. Never pass `--force` to `script/ha-env use` or `script/develop` without asking, and name the
+  environment that is active when you finish.
 - **`ha call`, `ha flow`, `ha reload` and `ha loglevel` change what the developer sees.** Cheap and reversible, but a
   config entry created by a flow stays until someone removes it.
 - **State the run state when you finish — after checking it**, never from memory.
@@ -82,7 +87,9 @@ There are two sources of truth for runtime state, and which one is correct depen
 running. Getting this backwards is the most common way to debug a ghost.
 
 **While Home Assistant runs, the API is authoritative and the files under `config/.storage/` are stale by design** —
-they are `Store.async_delay_save` files, written some time after the change they describe:
+they are `Store.async_delay_save` files, written some time after the change they describe. Everything here about
+`config/` applies to `.local/ha-config/<name>/` while another environment is active; `script/ha status` names the
+directory as `config_dir`.
 
 | What                              | Written                                            |
 | --------------------------------- | -------------------------------------------------- |
@@ -153,6 +160,10 @@ Two debug modes catch what no log level shows: Home Assistant's own, and asyncio
 API from the wrong thread and blocking the event loop are reported the moment they happen, instead of surfacing later
 as an unexplained hang or a state that quietly went wrong.
 
+A `debug_console:` line in `config/configuration.yaml` adds a Python console under **Settings** >
+**Tools**, with `hass` in scope — quicker than a log line and a restart for inspecting live objects. It runs in the event
+loop, so never call anything blocking there.
+
 **A config flow missing after a restart is usually the frontend cache, not the code.** Hard-refresh the browser before
 debugging the flow.
 
@@ -198,6 +209,7 @@ coordinator against it and check for the four failures that table cannot express
 - **Signalling failure by returning** `None` or an empty dict instead of raising. Entities then show `unknown` forever
   instead of going unavailable, and nothing retries.
 - **A broad `except Exception`** that swallows the auth error, so reauth never triggers and the entry just looks broken.
+  The OAuth2 helper's token errors are the same trap — see the instructions file's Authentication rules.
 - **Logging on every failed poll.** The coordinator logs the first failure and then stays quiet by design
   (`log-when-unavailable`, Silver). Manual logging buries the real error in repetition.
 - **`ConfigEntryNotReady` raised outside setup**, or `async_config_entry_first_refresh()` called outside setup.
@@ -205,9 +217,10 @@ coordinator against it and check for the four failures that table cannot express
 ## 5. Common fixes
 
 **Update interval too aggressive** — the Bronze `appropriate-polling` rule. Local devices ~30 s, cloud services
-~5–15 min. Read it from `entry.options` so the user can tune it.
+~5–15 min, fixed in code — never a user option
+([`blueprint.config_flow`](../../instructions/blueprint.config_flow.instructions.md#data-vs-options)).
 
-**Timeouts** — every request needs one, and it must use `async_timeout`/`asyncio.timeout`, never a bare `await`:
+**Timeouts** — every request needs one, with `asyncio.timeout`, never a bare `await`:
 
 ```python
 async with asyncio.timeout(10):
@@ -221,6 +234,10 @@ update; only raise when the update is genuinely useless.
 
 **Setup ordering** — expensive one-off work (fetching device metadata, capabilities) belongs in `_async_setup()`, which
 runs once before the first refresh, not in `_async_update_data`.
+
+**A listener or reconnect loop that outlives an unload** — start it with
+`entry.async_create_background_task(hass, coro, name)`, which is cancelled when the entry unloads and does not hold up
+startup. `hass.async_create_task` survives the unload and keeps running against a dead entry.
 
 ## 6. Confirm the fix
 
